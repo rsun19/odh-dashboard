@@ -3,10 +3,13 @@
         "src/index.{js,jsx,ts,tsx}"
     ],
     "ignore": [
-        "src/__mocks__/**/*.{js,jsx,ts,tsx}", 
-        "src/__tests__/**/*.{js,jsx,ts,tsx}", 
-        "src/third_party/mlmd/**/*.{js,jsx,ts,tsx}", 
         "package.json"
     ],
-    "project": ["src/**/*.{js,jsx,ts,tsx}"]
+    "project": [
+        "src/**/*.{js,jsx,ts,tsx}",
+        "!src/__mocks__/**/*.{js,jsx,ts,tsx}", 
+        "!src/**/__tests__/**/*.{js,jsx,ts,tsx}", 
+        "!src/third_party/mlmd/**/*.{js,jsx,ts,tsx}"
+    ],
+    "ignoreExportsUsedInFile": true
 }
