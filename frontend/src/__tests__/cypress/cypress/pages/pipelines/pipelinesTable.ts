@@ -70,6 +70,7 @@ class PipelinesTable {
         this.findTableHeaderButton('Created').click();
         if (isolation) { this.findTableHeaderButton('Created').click(); }
         this.findTableHeaderButton('Created').should(be.sortDescending);
+        break;
       }
     }
   }
