@@ -27,10 +27,12 @@ import {
 } from '~/__tests__/cypress/cypress/utils/models';
 import { asProductAdminUser } from '~/__tests__/cypress/cypress/utils/users';
 import { mockSecretK8sResource } from '~/__mocks__/mockSecretK8sResource';
-import { PipelineKFv2 } from '~/concepts/pipelines/kfTypes';
+import { PipelineKFv2, PipelineVersionKFv2 } from '~/concepts/pipelines/kfTypes';
 import { be } from '~/__tests__/cypress/cypress/utils/should';
 import { tablePagination } from '~/__tests__/cypress/cypress/pages/components/Pagination';
 import { mockSuccessGoogleRpcStatus } from '~/__mocks__/mockGoogleRpcStatusKF';
+import { pipelinesSection } from '../../pages/pipelines/pipelinesSection';
+import { projectDetails } from '../../pages/projects';
 
 const projectName = 'test-project-name';
 const initialMockPipeline = buildMockPipelineV2({ display_name: 'Test pipeline' });
@@ -48,347 +50,23 @@ describe('Pipelines', () => {
   });
 
   it('Configure pipeline server when data connection exist', () => {
-    initIntercepts({ isEmpty: true });
-
-    cy.interceptK8s(
-      'POST',
-      {
-        model: SecretModel,
-        ns: projectName,
-      },
-      mockSecretK8sResource({ namespace: projectName }),
-    ).as('createSecret');
-
-    cy.interceptK8s(
-      'POST',
-      DataSciencePipelineApplicationModel,
-      mockDataSciencePipelineApplicationK8sResource({
-        namespace: projectName,
-      }),
-    ).as('createDSPA');
-
-    pipelinesGlobal.visit(projectName);
-    cy.interceptK8sList(
-      SecretModel,
-      mockK8sResourceList([mockSecretK8sResource({ namespace: projectName })]),
-    ).as('refreshSecrets');
-
-    cy.interceptK8sList(
-      {
-        model: SecretModel,
-        ns: projectName,
-      },
-      mockK8sResourceList([
-        mockSecretK8sResource({ s3Bucket: 'c2RzZA==', namespace: projectName }),
-      ]),
-    );
-    pipelinesGlobal.findConfigurePipelineServerButton().should('be.enabled');
-    pipelinesGlobal.findConfigurePipelineServerButton().click();
-    configurePipelineServerModal.selectDataConnection('Test Secret •••••••••••••••••');
-    configurePipelineServerModal.findAwsKeyInput().should('have.value', 'sdsd');
-    configurePipelineServerModal.findShowPasswordButton().click();
-    configurePipelineServerModal.findAwsSecretKeyInput().should('have.value', 'sdsd');
-    configurePipelineServerModal
-      .findEndpointInput()
-      .should('have.value', 'https://s3.amazonaws.com/');
-    configurePipelineServerModal.findRegionInput().should('have.value', 'us-east-1');
-    configurePipelineServerModal.findBucketInput().should('have.value', 'sdsd');
-    configurePipelineServerModal.findSubmitButton().should('be.enabled');
-    configurePipelineServerModal.findSubmitButton().click();
-
-    cy.wait('@createSecret').then((interception) => {
-      expect(interception.request.url).to.include('?dryRun=All');
-      expect(interception.request.body).to.containSubset({
-        metadata: {
-          name: 'dashboard-dspa-secret',
-          namespace: 'test-project-name',
-          annotations: {},
-          labels: { 'opendatahub.io/dashboard': 'true' },
-        },
-        stringData: { AWS_ACCESS_KEY_ID: 'sdsd', AWS_SECRET_ACCESS_KEY: 'sdsd' },
-      });
-    });
-
-    cy.wait('@createSecret').then((interception) => {
-      expect(interception.request.url).not.to.include('?dryRun=All');
-    });
-
-    cy.get('@createSecret.all').then((interceptions) => {
-      expect(interceptions).to.have.length(2); // 1 dry-run request and 1 actual request
-    });
-
-    cy.wait('@createDSPA').then((interception) => {
-      expect(interception.request.body).to.containSubset({
-        metadata: { name: 'dspa', namespace: projectName },
-        spec: {
-          apiServer: { enableSamplePipeline: false },
-          dspVersion: 'v2',
-          objectStorage: {
-            externalStorage: {
-              host: 's3.us-east-1.amazonaws.com',
-              scheme: 'https',
-              bucket: 'sdsd',
-              region: 'us-east-1',
-              s3CredentialsSecret: {
-                accessKey: 'AWS_ACCESS_KEY_ID',
-                secretKey: 'AWS_SECRET_ACCESS_KEY',
-                secretName: 'test-secret',
-              },
-            },
-          },
-        },
-      });
-    });
+    runPipelineServerWhenDataConnectionExistTest();
   });
 
   it('Configure pipeline server when data connection does not exist', () => {
-    initIntercepts({ isEmpty: true });
-    pipelinesGlobal.visit(projectName);
-
-    cy.interceptK8s(
-      'POST',
-      {
-        model: SecretModel,
-        ns: projectName,
-      },
-      mockSecretK8sResource({ namespace: projectName }),
-    ).as('createSecret');
-
-    cy.interceptK8s(
-      'POST',
-      DataSciencePipelineApplicationModel,
-      mockDataSciencePipelineApplicationK8sResource({
-        namespace: projectName,
-      }),
-    ).as('createDSPA');
-
-    pipelinesGlobal.findConfigurePipelineServerButton().should('be.enabled');
-    pipelinesGlobal.findConfigurePipelineServerButton().click();
-    configurePipelineServerModal.findAwsKeyInput().type('test-aws-key');
-    configurePipelineServerModal.findAwsSecretKeyInput().type('test-secret-key');
-    configurePipelineServerModal.findEndpointInput().type('https://s3.amazonaws.com/');
-    configurePipelineServerModal.findRegionInput().should('have.value', 'us-east-1');
-    configurePipelineServerModal.findBucketInput().type('test-bucket');
-    configurePipelineServerModal.findSubmitButton().should('be.enabled');
-    configurePipelineServerModal.findSubmitButton().click();
-
-    cy.wait('@createSecret').then((interception) => {
-      expect(interception.request.url).to.include('?dryRun=All');
-      expect(interception.request.body).to.containSubset({
-        metadata: {
-          name: 'dashboard-dspa-secret',
-          namespace: projectName,
-          annotations: {},
-          labels: { 'opendatahub.io/dashboard': 'true' },
-        },
-        stringData: { AWS_ACCESS_KEY_ID: 'test-aws-key', AWS_SECRET_ACCESS_KEY: 'test-secret-key' },
-      });
-    });
-
-    cy.wait('@createSecret').then((interception) => {
-      expect(interception.request.url).not.to.include('?dryRun=All');
-    });
-
-    cy.get('@createSecret.all').then((interceptions) => {
-      expect(interceptions).to.have.length(2); // 1 dry-run request and 1 actual request
-    });
-
-    cy.wait('@createDSPA').then((interception) => {
-      expect(interception.request.body).to.containSubset({
-        metadata: { name: 'dspa', namespace: 'test-project-name' },
-        spec: {
-          apiServer: { enableSamplePipeline: false },
-          dspVersion: 'v2',
-          objectStorage: {
-            externalStorage: {
-              host: 's3.us-east-1.amazonaws.com',
-              scheme: 'https',
-              bucket: 'test-bucket',
-              region: 'us-east-1',
-              s3CredentialsSecret: {
-                accessKey: 'AWS_ACCESS_KEY_ID',
-                secretKey: 'AWS_SECRET_ACCESS_KEY',
-                secretName: 'test-secret',
-              },
-            },
-          },
-        },
-      });
-    });
+    runConfigurePipelineServerWhenDataConnectionDoesNotExistTest();
   });
 
   it('Connect external database while configuring pipeline server', () => {
-    initIntercepts({ isEmpty: true });
-    pipelinesGlobal.visit(projectName);
-
-    cy.interceptK8s(
-      'POST',
-      {
-        model: SecretModel,
-        ns: projectName,
-      },
-      mockSecretK8sResource({ namespace: projectName }),
-    ).as('createSecret');
-
-    cy.interceptK8s(
-      'POST',
-      DataSciencePipelineApplicationModel,
-      mockDataSciencePipelineApplicationK8sResource({
-        namespace: projectName,
-      }),
-    ).as('createDSPA');
-
-    pipelinesGlobal.findConfigurePipelineServerButton().should('be.enabled');
-    pipelinesGlobal.findConfigurePipelineServerButton().click();
-
-    configurePipelineServerModal.findAwsKeyInput().type('test-aws-key');
-    configurePipelineServerModal.findAwsSecretKeyInput().type('test-secret-key');
-    configurePipelineServerModal.findEndpointInput().type('https://s3.amazonaws.com/');
-    configurePipelineServerModal.findRegionInput().should('have.value', 'us-east-1');
-    configurePipelineServerModal.findBucketInput().type('test-bucket');
-
-    configurePipelineServerModal.findToggleButton().click();
-    configurePipelineServerModal.findExternalMYSQLDatabaseRadio().click();
-    configurePipelineServerModal.findSubmitButton().should('be.disabled');
-
-    configurePipelineServerModal.findHostInput().type('mysql');
-    configurePipelineServerModal.findPortInput().type('3306');
-    configurePipelineServerModal.findUsernameInput().type('test-user');
-    configurePipelineServerModal.findPasswordInput().type('password');
-    configurePipelineServerModal.findDatabaseInput().type('mlpipelines');
-
-    configurePipelineServerModal.findSubmitButton().should('be.enabled');
-    configurePipelineServerModal.findSubmitButton().click();
-
-    cy.wait('@createSecret').then((interception) => {
-      expect(interception.request.url).to.include('?dryRun=All');
-      expect(interception.request.body).to.containSubset({
-        metadata: {
-          name: 'pipelines-db-password',
-          namespace: 'test-project-name',
-          annotations: {},
-          labels: { 'opendatahub.io/dashboard': 'true' },
-        },
-        stringData: { 'db-password': 'password' },
-      });
-    });
-
-    cy.wait('@createSecret').then((interception) => {
-      expect(interception.request.url).to.include('?dryRun=All');
-      expect(interception.request.body).to.containSubset({
-        metadata: {
-          name: 'dashboard-dspa-secret',
-          namespace: projectName,
-          annotations: {},
-          labels: { 'opendatahub.io/dashboard': 'true' },
-        },
-        stringData: { AWS_ACCESS_KEY_ID: 'test-aws-key', AWS_SECRET_ACCESS_KEY: 'test-secret-key' },
-      });
-    });
-
-    cy.wait('@createSecret').then((interception) => {
-      expect(interception.request.url).not.to.include('?dryRun=All');
-    });
-
-    cy.get('@createSecret.all').then((interceptions) => {
-      expect(interceptions).to.have.length(4); // 2 dry-run request and 2 actual request
-    });
-
-    cy.wait('@createDSPA').then((interception) => {
-      expect(interception.request.body).to.containSubset({
-        spec: {
-          apiServer: { enableSamplePipeline: false },
-          dspVersion: 'v2',
-          objectStorage: {
-            externalStorage: {
-              host: 's3.us-east-1.amazonaws.com',
-              scheme: 'https',
-              bucket: 'test-bucket',
-              region: 'us-east-1',
-              s3CredentialsSecret: {
-                accessKey: 'AWS_ACCESS_KEY_ID',
-                secretKey: 'AWS_SECRET_ACCESS_KEY',
-                secretName: 'test-secret',
-              },
-            },
-          },
-          database: {
-            externalDB: {
-              host: 'mysql',
-              passwordSecret: { key: 'db-password', name: 'test-secret' },
-              pipelineDBName: 'mlpipelines',
-              port: '3306',
-              username: 'test-user',
-            },
-          },
-        },
-      });
-    });
+    runConnectExternalDatabasePipelineConfigurationTest();
   });
 
   it('Delete pipeline server', () => {
-    initIntercepts({});
-
-    cy.interceptK8s(
-      'DELETE',
-      SecretModel,
-      mockSecretK8sResource({ name: 'ds-pipeline-config', namespace: projectName }),
-    ).as('deletePipelineConfig');
-    cy.interceptK8s(
-      'DELETE',
-      SecretModel,
-      mockSecretK8sResource({ name: 'pipelines-db-password', namespace: projectName }),
-    ).as('deletePipelineDBPassword');
-    cy.interceptK8s(
-      'DELETE',
-      SecretModel,
-      mockSecretK8sResource({ name: 'dashboard-dspa-secret', namespace: projectName }),
-    ).as('deleteDSPASecret');
-    cy.interceptK8s(
-      'DELETE',
-      DataSciencePipelineApplicationModel,
-      mockDataSciencePipelineApplicationK8sResource({ namespace: projectName }),
-    ).as('deleteDSPA');
-
-    pipelinesGlobal.visit(projectName);
-    pipelinesGlobal.selectPipelineServerAction('Delete pipeline server');
-    deleteModal.findSubmitButton().should('be.disabled');
-    deleteModal.findInput().fill('Test Project pipeline server');
-    deleteModal.findSubmitButton().should('be.enabled').click();
-
-    cy.wait('@deletePipelineDBPassword');
-    cy.wait('@deletePipelineConfig');
-    cy.wait('@deleteDSPASecret');
-    cy.wait('@deleteDSPA');
+    runDeletePipelineServerTest();
   });
 
   it('View pipeline server', () => {
-    initIntercepts({});
-    cy.interceptK8s(
-      {
-        model: SecretModel,
-        ns: projectName,
-      },
-      mockSecretK8sResource({
-        s3Bucket: 'c2RzZA==',
-        namespace: projectName,
-        name: 'aws-connection-test',
-      }),
-    );
-
-    pipelinesGlobal.visit(projectName);
-
-    pipelinesGlobal.selectPipelineServerAction('View pipeline server configuration');
-    viewPipelineServerModal.findCloseButton().click();
-
-    pipelinesGlobal.selectPipelineServerAction('View pipeline server configuration');
-    viewPipelineServerModal.shouldHaveAccessKey('sdsd');
-    viewPipelineServerModal.findPasswordHiddenButton().click();
-    viewPipelineServerModal.shouldHaveSecretKey('sdsd');
-    viewPipelineServerModal.shouldHaveEndPoint('https://s3.amazonaws.com');
-    viewPipelineServerModal.shouldHaveBucketName('test-pipelines-bucket');
-
-    viewPipelineServerModal.findDoneButton().click();
+    viewPipelineServerDetailsTest();
   });
 
   it('renders the page with pipelines table data', () => {
@@ -650,74 +328,7 @@ describe('Pipelines', () => {
   });
 
   it('uploads a new pipeline version', () => {
-    initIntercepts({});
-    pipelinesGlobal.visit(projectName);
-    const uploadVersionParams = {
-      display_name: 'New pipeline version',
-      description: 'New pipeline version description',
-      pipeline_id: 'test-pipeline',
-    };
-
-    // Wait for the pipelines table to load
-    pipelinesTable.find();
-
-    // Open the "Upload new version" modal
-    pipelinesGlobal.findUploadVersionButton().click();
-
-    const uploadedMockPipelineVersion = buildMockPipelineVersionV2(uploadVersionParams);
-
-    // Intercept upload/re-fetch of pipeline versions
-    pipelineVersionImportModal
-      .mockUploadVersion(uploadVersionParams, projectName)
-      .as('uploadVersion');
-    pipelinesTable
-      .mockGetPipelineVersions(
-        [initialMockPipelineVersion, uploadedMockPipelineVersion],
-        initialMockPipeline.pipeline_id,
-        projectName,
-      )
-      .as('refreshVersions');
-
-    // Fill out the "Upload new version" modal and submit
-    pipelineVersionImportModal.shouldBeOpen();
-    pipelineVersionImportModal.selectPipelineByName('Test pipeline');
-    pipelineVersionImportModal.fillVersionName('New pipeline version');
-    pipelineVersionImportModal.fillVersionDescription('New pipeline version description');
-    pipelineVersionImportModal.uploadPipelineYaml(pipelineYamlPath);
-    pipelineVersionImportModal.submit();
-
-    // Wait for upload/fetch requests
-    cy.wait('@uploadVersion').then((interception) => {
-      // Note: contain is used instead of equals as different browser engines will add a different boundary
-      // to the body - the aim is to not limit these tests to working with one specific engine.
-      expect(interception.request.body).to.contain(
-        'Content-Disposition: form-data; name="uploadfile"; filename="uploadedFile.yml"',
-      );
-      expect(interception.request.body).to.contain('Content-Type: application/x-yaml');
-      expect(interception.request.body).to.contain('test-yaml-pipeline-content');
-
-      expect(interception.request.query).to.eql({
-        name: 'New pipeline version',
-        description: 'New pipeline version description',
-        pipelineid: 'test-pipeline',
-      });
-    });
-
-    cy.wait('@refreshVersions').then((interception) => {
-      expect(interception.request.query).to.eql({
-        sort_by: 'created_at desc',
-        page_size: '1',
-        pipeline_id: 'test-pipeline',
-      });
-    });
-
-    // Verify the uploaded pipeline version is in the table
-    const pipelineRow = pipelinesTable.getRowById(initialMockPipeline.pipeline_id);
-    pipelineRow.findExpandButton().click();
-    pipelineRow
-      .getPipelineVersionRowById(uploadedMockPipelineVersion.pipeline_version_id)
-      .find()
-      .should('exist');
+    runUploadPipelineVersionTest();
   });
 
   it('imports a new pipeline version by url', () => {
@@ -945,29 +556,11 @@ describe('Pipelines', () => {
   });
 
   it('navigate to create run page from pipeline row', () => {
-    initIntercepts({});
-    pipelinesGlobal.visit(projectName);
-
-    // Wait for the pipelines table to load
-    pipelinesTable.find();
-    pipelinesTable
-      .getRowById(initialMockPipeline.pipeline_id)
-      .findKebabAction('Create run')
-      .click();
-    verifyRelativeURL(`/pipelines/${projectName}/pipelineRun/create`);
+    runCreateRunPageNavTest();
   });
 
   it('navigates to "Schedule run" page from pipeline row', () => {
-    initIntercepts({});
-    pipelinesGlobal.visit(projectName);
-
-    pipelinesTable.find();
-    pipelinesTable
-      .getRowById(initialMockPipeline.pipeline_id)
-      .findKebabAction('Schedule run')
-      .click();
-
-    verifyRelativeURL(`/pipelines/${projectName}/pipelineRun/create?runType=scheduled`);
+    runScheduleRunPageNavTest();
   });
 
   it('navigate to create run page from pipeline version row', () => {
@@ -1119,12 +712,12 @@ type HandlersProps = {
   nextPageToken?: string | undefined;
 };
 
-const initIntercepts = ({
+export const initIntercepts = ({
   isEmpty = false,
   mockPipelines = [initialMockPipeline],
   totalSize = mockPipelines.length,
   nextPageToken,
-}: HandlersProps) => {
+}: HandlersProps): void => {
   cy.interceptK8sList(
     DataSciencePipelineApplicationModel,
     mockK8sResourceList(
@@ -1193,3 +786,545 @@ const createDeletePipelineIntercept = (pipelineId: string) =>
     },
     mockSuccessGoogleRpcStatus({}),
   );
+
+export const runCreateRunPageNavTest = (
+  pipelineList: boolean = false
+) => {
+  initIntercepts({});
+  pipelineList ? projectDetails.visitSection(projectName, 'pipelines-projects') : pipelinesGlobal.visit(projectName);
+
+  // Wait for the pipelines table to load
+  pipelinesTable.find();
+  pipelinesTable
+    .getRowById(initialMockPipeline.pipeline_id)
+    .findKebabAction('Create run')
+    .click();
+  verifyRelativeURL(`/pipelines/${projectName}/pipelineRun/create`);
+}
+
+export const runScheduleRunPageNavTest = (
+  pipelineList: boolean = false
+) => {
+  initIntercepts({});
+  pipelineList ? projectDetails.visitSection(projectName, 'pipelines-projects') : pipelinesGlobal.visit(projectName);
+
+  pipelinesTable.find();
+  pipelinesTable
+    .getRowById(initialMockPipeline.pipeline_id)
+    .findKebabAction('Schedule run')
+    .click();
+
+  verifyRelativeURL(`/pipelines/${projectName}/pipelineRun/create?runType=scheduled`);
+}
+
+export const runPipelineServerWhenDataConnectionExistTest = (
+  pipelineList: boolean = false
+): void => {
+  initIntercepts({ isEmpty: true });
+  cy.interceptK8s(
+    'POST',
+    {
+      model: SecretModel,
+      ns: projectName,
+    },
+    mockSecretK8sResource({ namespace: projectName }),
+  ).as('createSecret');
+
+  cy.interceptK8s(
+    'POST',
+    DataSciencePipelineApplicationModel,
+    mockDataSciencePipelineApplicationK8sResource({
+      namespace: projectName,
+    }),
+  ).as('createDSPA');
+
+  pipelineList ? projectDetails.visitSection(projectName, 'pipelines-projects') : pipelinesGlobal.visit(projectName)
+  
+  cy.interceptK8sList(
+    SecretModel,
+    mockK8sResourceList([mockSecretK8sResource({ namespace: projectName })]),
+  ).as('refreshSecrets');
+
+  cy.interceptK8sList(
+    {
+      model: SecretModel,
+      ns: projectName,
+    },
+    mockK8sResourceList([
+      mockSecretK8sResource({ s3Bucket: 'c2RzZA==', namespace: projectName }),
+    ]),
+  );
+  if (pipelineList) {
+    pipelinesSection.findCreatePipelineButton().should('be.enabled')
+    pipelinesSection.findCreatePipelineButton().click()
+  } else {
+    pipelinesGlobal.findConfigurePipelineServerButton().should('be.enabled');
+    pipelinesGlobal.findConfigurePipelineServerButton().click();
+  }
+  configurePipelineServerWhenDataConnectionExist({})
+}
+
+export const runConfigurePipelineServerWhenDataConnectionDoesNotExistTest = (
+  pipelineList: boolean = false
+): void => {
+  initIntercepts({ isEmpty: true });
+  pipelineList ? projectDetails.visitSection(projectName, 'pipelines-projects') : pipelinesGlobal.visit(projectName)
+
+  cy.interceptK8s(
+    'POST',
+    {
+      model: SecretModel,
+      ns: projectName,
+    },
+    mockSecretK8sResource({ namespace: projectName }),
+  ).as('createSecret');
+
+  cy.interceptK8s(
+    'POST',
+    DataSciencePipelineApplicationModel,
+    mockDataSciencePipelineApplicationK8sResource({
+      namespace: projectName,
+    }),
+  ).as('createDSPA');
+
+  if (pipelineList) {
+    pipelinesSection.findCreatePipelineButton().should('be.enabled')
+    pipelinesSection.findCreatePipelineButton().click()
+  } else {
+    pipelinesGlobal.findConfigurePipelineServerButton().should('be.enabled');
+    pipelinesGlobal.findConfigurePipelineServerButton().click();
+  }
+
+  configurePipelineServer({});
+}
+
+export const runConnectExternalDatabasePipelineConfigurationTest = (
+  pipelineList: boolean = false
+): void => {
+  initIntercepts({ isEmpty: true });
+  pipelineList ? projectDetails.visitSection(projectName, 'pipelines-projects') : pipelinesGlobal.visit(projectName)
+
+  cy.interceptK8s(
+    'POST',
+    {
+      model: SecretModel,
+      ns: projectName,
+    },
+    mockSecretK8sResource({ namespace: projectName }),
+  ).as('createSecret');
+
+  cy.interceptK8s(
+    'POST',
+    DataSciencePipelineApplicationModel,
+    mockDataSciencePipelineApplicationK8sResource({
+      namespace: projectName,
+    }),
+  ).as('createDSPA');
+
+  if (pipelineList) {
+    pipelinesSection.findCreatePipelineButton().should('be.enabled')
+    pipelinesSection.findCreatePipelineButton().click()
+  } else {
+    pipelinesGlobal.findConfigurePipelineServerButton().should('be.enabled');
+    pipelinesGlobal.findConfigurePipelineServerButton().click();
+  }
+
+  configurePipelineServer({ db: true });
+}
+
+export const viewPipelineServerDetailsTest = (
+  pipelineList: boolean = false
+): void => {
+  initIntercepts({});
+  cy.interceptK8s(
+    {
+      model: SecretModel,
+      ns: projectName,
+    },
+    mockSecretK8sResource({
+      s3Bucket: 'c2RzZA==',
+      namespace: projectName,
+      name: 'aws-connection-test',
+    }),
+  );
+
+  pipelineList ? projectDetails.visitSection(projectName, 'pipelines-projects') : pipelinesGlobal.visit(projectName);
+  viewPipelinelineDetails();
+}
+
+export const runDeletePipelineServerTest = (
+  pipelineList: boolean = false
+) => {
+  initIntercepts({});
+  pipelineList ? projectDetails.visitSection(projectName, 'pipelines-projects') : pipelinesGlobal.visit(projectName);
+  pipelinesGlobal.selectPipelineServerAction('Delete pipeline server');
+  deletePipelineServer(projectName, 'Test Project pipeline server');
+}
+
+export const runUploadPipelineVersionTest = (
+  pipelineList: boolean = false
+) => {
+  initIntercepts({});
+  pipelineList ? projectDetails.visitSection(projectName, 'pipelines-projects') : pipelinesGlobal.visit(projectName);
+  const uploadVersionParams = {
+    display_name: 'New pipeline version',
+    description: 'New pipeline version description',
+    pipeline_id: 'test-pipeline',
+  };
+
+  // Wait for the pipelines table to load
+  pipelinesTable.find();
+
+  // Open the "Upload new version" modal
+  if (pipelineList) {
+    pipelinesSection.findImportPipelineSplitButton().click();
+    pipelinesSection.findUploadVersionButton().click();
+  }
+  pipelinesGlobal.findUploadVersionButton().click();
+
+  mockPipelineUpload(
+    uploadVersionParams,
+    projectName,
+    initialMockPipeline,
+    initialMockPipelineVersion,
+    pipelineYamlPath
+  );
+}
+
+export const configurePipelineServer = ({
+  projectName = 'test-project-name',
+  awsKey = 'test-aws-key',
+  awsSecretKey = 'test-secret-key',
+  endpoint = 'https://s3.amazonaws.com/',
+  regionInput = 'us-east-1',
+  testBucket = 'test-bucket',
+  db = false,
+  hostInput = 'mysql',
+  portInput = '3306',
+  usernameInput = 'test-user',
+  passwordInput = 'password',
+  databaseInput = 'mlpipelines'
+}:{
+  projectName?: string;
+  awsKey?: string;
+  awsSecretKey?: string;
+  endpoint?: string;
+  regionInput?: string;
+  testBucket?: string;
+  db?: boolean;
+  hostInput?: string;
+  portInput?: string;
+  usernameInput?: string;
+  passwordInput?: string;
+  databaseInput?: string;
+}): void => {
+  configurePipelineServerModal.findAwsKeyInput().type(awsKey);
+  configurePipelineServerModal.findAwsSecretKeyInput().type(awsSecretKey);
+  configurePipelineServerModal.findEndpointInput().type(endpoint);
+  configurePipelineServerModal.findRegionInput().should('have.value', regionInput);
+  configurePipelineServerModal.findBucketInput().type(testBucket);
+  if (db) {
+    configurePipelineServerModal.findToggleButton().click();
+    configurePipelineServerModal.findExternalMYSQLDatabaseRadio().click();
+    configurePipelineServerModal.findSubmitButton().should('be.disabled');
+
+    configurePipelineServerModal.findHostInput().type(hostInput);
+    configurePipelineServerModal.findPortInput().type(portInput);
+    configurePipelineServerModal.findUsernameInput().type(usernameInput);
+    configurePipelineServerModal.findPasswordInput().type(passwordInput);
+    configurePipelineServerModal.findDatabaseInput().type(databaseInput);
+  }
+  configurePipelineServerModal.findSubmitButton().should('be.enabled');
+  configurePipelineServerModal.findSubmitButton().click();
+  db ? waitForConfigurationInterception({
+    projectName: projectName, 
+    awsKey: awsKey,
+    secretAwsKey: awsSecretKey,
+    regionInput: regionInput,
+    bucketInput: testBucket,
+    db: true,
+    hostInput: hostInput,
+    portInput: portInput,
+    usernameInput: usernameInput,
+    databaseInput: databaseInput
+  }) : waitForConfigurationInterception({
+    projectName: projectName, 
+    awsKey: awsKey,
+    secretAwsKey: awsSecretKey,
+    regionInput: regionInput,
+    bucketInput: testBucket
+  });
+}
+
+export const configurePipelineServerWhenDataConnectionExist = ({
+  projectName = 'test-project-name',
+  dataConnection = 'Test Secret •••••••••••••••••',
+  awsKey = 'sdsd',
+  awsSecretKey = 'sdsd',
+  endpoint = 'https://s3.amazonaws.com/',
+  regionInput = 'us-east-1',
+  bucketInput = 'sdsd',
+}: {
+  projectName?: string;
+  dataConnection?: string;
+  awsKey?: string;
+  awsSecretKey?: string;
+  endpoint?: string;
+  regionInput?: string;
+  bucketInput?: string;
+}): void => {
+  configurePipelineServerModal.selectDataConnection(dataConnection);
+  configurePipelineServerModal.findAwsKeyInput().should('have.value', awsKey);
+  configurePipelineServerModal.findShowPasswordButton().click();
+  configurePipelineServerModal.findAwsSecretKeyInput().should('have.value', awsSecretKey);
+  configurePipelineServerModal
+    .findEndpointInput()
+    .should('have.value', endpoint);
+  configurePipelineServerModal.findRegionInput().should('have.value', regionInput);
+  configurePipelineServerModal.findBucketInput().should('have.value', bucketInput);
+  configurePipelineServerModal.findSubmitButton().should('be.enabled');
+  configurePipelineServerModal.findSubmitButton().click();
+
+  waitForConfigurationInterception({
+    projectName: projectName,
+    awsKey: awsKey,
+    secretAwsKey: awsSecretKey,
+    regionInput: regionInput,
+    bucketInput: bucketInput
+  });
+}
+
+const waitForConfigurationInterception = ({
+  projectName,
+  awsKey,
+  secretAwsKey,
+  regionInput,
+  bucketInput,
+  db = false,
+  hostInput = 'mysql',
+  portInput = '3306',
+  usernameInput = 'test-user',
+  databaseInput = 'mlpipelines'
+}: {
+  projectName: string;
+  awsKey: string;
+  secretAwsKey: string;
+  regionInput: string;
+  bucketInput: string;
+  db?: boolean;
+  hostInput?: string;
+  portInput?: string;
+  usernameInput?: string;
+  databaseInput?: string;
+}): void => {
+  if (db) {
+    cy.wait('@createSecret').then((interception) => {
+      expect(interception.request.url).to.include('?dryRun=All');
+      expect(interception.request.body).to.containSubset({
+        metadata: {
+          name: 'pipelines-db-password',
+          namespace: 'test-project-name',
+          annotations: {},
+          labels: { 'opendatahub.io/dashboard': 'true' },
+        },
+        stringData: { 'db-password': 'password' },
+      });
+    });
+  }
+
+  cy.wait('@createSecret').then((interception) => {
+    expect(interception.request.url).to.include('?dryRun=All');
+    expect(interception.request.body).to.containSubset({
+      metadata: {
+        name: 'dashboard-dspa-secret',
+        namespace: projectName,
+        annotations: {},
+        labels: { 'opendatahub.io/dashboard': 'true' },
+      },
+      stringData: { AWS_ACCESS_KEY_ID: awsKey, AWS_SECRET_ACCESS_KEY: secretAwsKey },
+    });
+  });
+
+  cy.wait('@createSecret').then((interception) => {
+    expect(interception.request.url).not.to.include('?dryRun=All');
+  });
+
+  cy.get('@createSecret.all').then((interceptions) => {
+    expect(interceptions).to.have.length(db ? 4 : 2); // 2 or 1 dry-run request and 2 or 1 actual request
+  });
+
+  cy.wait('@createDSPA').then((interception) => {
+    db ? 
+    expect(interception.request.body).to.containSubset({
+      metadata: { name: 'dspa', namespace: projectName },
+      spec: {
+        apiServer: { enableSamplePipeline: false },
+        dspVersion: 'v2',
+        objectStorage: {
+          externalStorage: {
+            host: `s3.${regionInput}.amazonaws.com`,
+            scheme: 'https',
+            bucket: bucketInput,
+            region: regionInput,
+            s3CredentialsSecret: {
+              accessKey: 'AWS_ACCESS_KEY_ID',
+              secretKey: 'AWS_SECRET_ACCESS_KEY',
+              secretName: 'test-secret',
+            },
+          },
+        },
+        database: {
+          externalDB: {
+            host: hostInput,
+            passwordSecret: { key: 'db-password', name: 'test-secret' },
+            pipelineDBName: databaseInput,
+            port: portInput,
+            username: usernameInput,
+          },
+        },
+      },
+    }) :
+    expect(interception.request.body).to.containSubset({
+      metadata: { name: 'dspa', namespace: projectName },
+      spec: {
+        apiServer: { enableSamplePipeline: false },
+        dspVersion: 'v2',
+        objectStorage: {
+          externalStorage: {
+            host: `s3.${regionInput}.amazonaws.com`,
+            scheme: 'https',
+            bucket: bucketInput,
+            region: regionInput,
+            s3CredentialsSecret: {
+              accessKey: 'AWS_ACCESS_KEY_ID',
+              secretKey: 'AWS_SECRET_ACCESS_KEY',
+              secretName: 'test-secret',
+            },
+          },
+        },
+      },    
+    });
+  });
+}
+
+export const viewPipelinelineDetails = (
+  projectName: string = 'test-project-name',
+  accessKey: string = 'sdsd',
+  secretKey: string = 'sdsd',
+  endpoint: string = 'https://s3.amazonaws.com',
+  bucketName: string = 'test-pipelines-bucket'
+) => {
+    pipelinesGlobal.selectPipelineServerAction('View pipeline server configuration');
+    viewPipelineServerModal.shouldHaveAccessKey(accessKey);
+    viewPipelineServerModal.findPasswordHiddenButton().click();
+    viewPipelineServerModal.shouldHaveSecretKey(secretKey);
+    viewPipelineServerModal.shouldHaveEndPoint(endpoint);
+    viewPipelineServerModal.shouldHaveBucketName(bucketName);
+
+    viewPipelineServerModal.findDoneButton().click();
+}
+
+interface uploadVersionParamsProps {
+  display_name: string
+  description: string
+  pipeline_id: string
+}
+
+export const mockPipelineUpload = (
+  uploadVersionParams: uploadVersionParamsProps,
+  projectName: string,
+  initialMockPipeline: PipelineKFv2,
+  initialMockPipelineVersion: PipelineVersionKFv2,
+  pipelineYamlPath: string
+): void => {
+   const uploadedMockPipelineVersion = buildMockPipelineVersionV2(uploadVersionParams);
+
+    // Intercept upload/re-fetch of pipeline versions
+    pipelineVersionImportModal
+      .mockUploadVersion(uploadVersionParams, projectName)
+      .as('uploadVersion');
+    pipelinesTable
+      .mockGetPipelineVersions(
+        [initialMockPipelineVersion, uploadedMockPipelineVersion],
+        initialMockPipeline.pipeline_id,
+        projectName,
+      )
+      .as('refreshVersions');
+
+    // Fill out the "Upload new version" modal and submit
+    pipelineVersionImportModal.shouldBeOpen();
+    pipelineVersionImportModal.selectPipelineByName('Test pipeline');
+    pipelineVersionImportModal.fillVersionName('New pipeline version');
+    pipelineVersionImportModal.fillVersionDescription('New pipeline version description');
+    pipelineVersionImportModal.uploadPipelineYaml(pipelineYamlPath);
+    pipelineVersionImportModal.submit();
+
+    // Wait for upload/fetch requests
+    cy.wait('@uploadVersion').then((interception) => {
+      // Note: contain is used instead of equals as different browser engines will add a different boundary
+      // to the body - the aim is to not limit these tests to working with one specific engine.
+      expect(interception.request.body).to.contain(
+        'Content-Disposition: form-data; name="uploadfile"; filename="uploadedFile.yml"',
+      );
+      expect(interception.request.body).to.contain('Content-Type: application/x-yaml');
+      expect(interception.request.body).to.contain('test-yaml-pipeline-content');
+
+      expect(interception.request.query).to.eql({
+        name: 'New pipeline version',
+        description: 'New pipeline version description',
+        pipelineid: 'test-pipeline',
+      });
+    });
+
+    cy.wait('@refreshVersions').then((interception) => {
+      expect(interception.request.query).to.eql({
+        sort_by: 'created_at desc',
+        page_size: '1',
+        pipeline_id: 'test-pipeline',
+      });
+    });
+
+    // Verify the uploaded pipeline version is in the table
+    const pipelineRow = pipelinesTable.getRowById(initialMockPipeline.pipeline_id);
+    pipelineRow.findExpandButton().click();
+    pipelineRow
+      .getPipelineVersionRowById(uploadedMockPipelineVersion.pipeline_version_id)
+      .find()
+      .should('exist');
+}
+
+export const deletePipelineServer = (
+  projectName: string,
+  testProjectName: string = 'Test Project pipeline server'
+): void => {
+  cy.interceptK8s(
+    'DELETE',
+    SecretModel,
+    mockSecretK8sResource({ name: 'ds-pipeline-config', namespace: projectName }),
+  ).as('deletePipelineConfig');
+  cy.interceptK8s(
+    'DELETE',
+    SecretModel,
+    mockSecretK8sResource({ name: 'pipelines-db-password', namespace: projectName }),
+  ).as('deletePipelineDBPassword');
+  cy.interceptK8s(
+    'DELETE',
+    SecretModel,
+    mockSecretK8sResource({ name: 'dashboard-dspa-secret', namespace: projectName }),
+  ).as('deleteDSPASecret');
+  cy.interceptK8s(
+    'DELETE',
+    DataSciencePipelineApplicationModel,
+    mockDataSciencePipelineApplicationK8sResource({ namespace: projectName }),
+  ).as('deleteDSPA');
+
+  deleteModal.findSubmitButton().should('be.disabled');
+  deleteModal.findInput().fill(testProjectName);
+  deleteModal.findSubmitButton().should('be.enabled').click();
+
+  cy.wait('@deletePipelineDBPassword');
+  cy.wait('@deletePipelineConfig');
+  cy.wait('@deleteDSPASecret');
+  cy.wait('@deleteDSPA');
+
+}

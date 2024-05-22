@@ -3,6 +3,7 @@ import { PipelineKFv2, PipelineVersionKFv2 } from '~/concepts/pipelines/kfTypes'
 import { buildMockPipelines } from '~/__mocks__/mockPipelinesProxy';
 import { buildMockPipelineVersionsV2 } from '~/__mocks__/mockPipelineVersionsProxy';
 import { TableRow } from '~/__tests__/cypress/cypress/pages/components/table';
+import { be } from '../../utils/should';
 
 class PipelinesTableRow extends TableRow {
   findPipelineVersionsTable() {
@@ -31,8 +32,47 @@ class PipelineVersionsTableRow extends TableRow {
   }
 }
 
+export enum PipelineSort {
+  PipelineAsc = 'PIPELINE_ASC',
+  PipelineDesc = 'PIPELINE_DESC',
+  CreatedAsc = 'CREATED_ASC',
+  CreatedDesc = 'CREATED_DESC'
+}
+
 class PipelinesTable {
   private testId = 'pipelines-table';
+
+  shouldSortTable({
+    sortType,
+    isolation = false // this means it was sorted by ascending before sorted by descending. Set to "true" for isloated calls.
+  }: {
+    sortType: PipelineSort;
+    isolation?: boolean;
+  }): void {
+    switch(sortType) {
+      case PipelineSort.PipelineAsc: {
+        this.findTableHeaderButton('Pipeline').click();
+        this.findTableHeaderButton('Pipeline').should(be.sortAscending);
+        break;
+      } 
+      case PipelineSort.PipelineDesc: {
+        this.findTableHeaderButton('Pipeline').click();
+        if (isolation) { this.findTableHeaderButton('Pipeline').click(); }
+        this.findTableHeaderButton('Pipeline').should(be.sortDescending);
+        break;
+      } 
+      case PipelineSort.CreatedAsc: {
+        this.findTableHeaderButton('Created').click();
+        this.findTableHeaderButton('Created').should(be.sortAscending);
+        break;
+      } 
+      case PipelineSort.CreatedDesc: {
+        this.findTableHeaderButton('Created').click();
+        if (isolation) { this.findTableHeaderButton('Created').click(); }
+        this.findTableHeaderButton('Created').should(be.sortDescending);
+      }
+    }
+  }
 
   find() {
     return cy.findByTestId(this.testId);
