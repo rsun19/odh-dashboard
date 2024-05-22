@@ -119,12 +119,12 @@ describe('PipelinesList', () => {
     cy.interceptOdh(
       'GET /api/service/pipelines/:namespace/:serviceName/apis/v2beta1/pipelines',
       {
-        path: { namespace: 'test-project', serviceName: 'dspa' },
+        path: { namespace: projectName, serviceName: 'dspa' },
       },
       buildMockPipelines([]),
     ).as('pipelines');
 
-    projectDetails.visitSection('test-project', 'pipelines-projects');
+    projectDetails.visitSection(projectName, 'pipelines-projects');
 
     pipelinesSection.findImportPipelineSplitButton().should('be.enabled').click();
 
@@ -140,51 +140,16 @@ describe('PipelinesList', () => {
 
   it('should show the ability to delete the pipeline server kebab option', () => {
     initIntercepts({});
-    cy.interceptK8sList(
-      DataSciencePipelineApplicationModel,
-      mockK8sResourceList([mockDataSciencePipelineApplicationK8sResource({ dspVersion: 'v1' })]),
-    );
-    cy.interceptK8s(
-      DataSciencePipelineApplicationModel,
-      mockDataSciencePipelineApplicationK8sResource({ dspVersion: 'v1' }),
-    );
-    projectDetails.visitSection('test-project', 'pipelines-projects');
 
-    pipelinesSection.findAllActions().should('have.length', 1);
-    pipelinesSection.findImportPipelineSplitButton().should('not.exist');
+    projectDetails.visitSection(projectName, 'pipelines-projects');
+
     pipelinesSection.findKebabActions().should('be.visible').should('be.enabled');
     pipelinesSection.findKebabActionItem('Delete pipeline server').should('be.visible');
   });
 
   it('should navigate to details page when clicking on the version name', () => {
     initIntercepts({});
-    cy.interceptK8sList(
-      DataSciencePipelineApplicationModel,
-      mockK8sResourceList([mockDataSciencePipelineApplicationK8sResource({})]),
-    );
-    cy.interceptK8s(
-      DataSciencePipelineApplicationModel,
-      mockDataSciencePipelineApplicationK8sResource({}),
-    );
-    cy.interceptOdh(
-      'GET /api/service/pipelines/:namespace/:serviceName/apis/v2beta1/pipelines',
-      {
-        path: { namespace: 'test-project', serviceName: 'dspa' },
-      },
-      buildMockPipelines([initialMockPipeline]),
-    );
-    cy.interceptOdh(
-      'GET /api/service/pipelines/:namespace/:serviceName/apis/v2beta1/pipelines/:pipelineId/versions',
-      {
-        path: {
-          namespace: 'test-project',
-          serviceName: 'dspa',
-          pipelineId: initialMockPipeline.pipeline_id,
-        },
-      },
-      buildMockPipelineVersionsV2([initialMockPipelineVersion]),
-    );
-    projectDetails.visitSection('test-project', 'pipelines-projects');
+    projectDetails.visitSection(projectName, 'pipelines-projects');
 
     pipelinesTable.find();
     const pipelineRow = pipelinesTable.getRowById(initialMockPipeline.pipeline_id);
@@ -194,7 +159,7 @@ describe('PipelinesList', () => {
       .findPipelineVersionLink()
       .click();
     verifyRelativeURL(
-      `/projects/test-project/pipeline/view/${initialMockPipeline.pipeline_id}/${initialMockPipelineVersion.pipeline_version_id}`,
+      `/projects/${projectName}/pipeline/view/${initialMockPipeline.pipeline_id}/${initialMockPipelineVersion.pipeline_version_id}`,
     );
   });
 

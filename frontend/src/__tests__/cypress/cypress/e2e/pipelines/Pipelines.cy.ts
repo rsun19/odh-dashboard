@@ -979,8 +979,9 @@ export const runUploadPipelineVersionTest = (
   if (pipelineList) {
     pipelinesSection.findImportPipelineSplitButton().click();
     pipelinesSection.findUploadVersionButton().click();
+  } else {
+    pipelinesGlobal.findUploadVersionButton().click();
   }
-  pipelinesGlobal.findUploadVersionButton().click();
 
   mockPipelineUpload(
     uploadVersionParams,

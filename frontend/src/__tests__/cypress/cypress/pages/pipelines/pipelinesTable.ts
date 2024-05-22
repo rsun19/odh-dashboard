@@ -44,7 +44,7 @@ class PipelinesTable {
 
   shouldSortTable({
     sortType,
-    isolation = false // this means it was sorted by ascending before sorted by descending. Set to "true" for isloated calls.
+    isolation = false // this means it was sorted by ascending before sorted by descending. Set to "true" for isolated calls.
   }: {
     sortType: PipelineSort;
     isolation?: boolean;
