@@ -1,5 +1,5 @@
 import YAML from 'yaml';
-import { k8sDeleteResource, k8sListResource } from '@openshift/dynamic-plugin-sdk-utils';
+import { k8sListResource } from '@openshift/dynamic-plugin-sdk-utils';
 import { ServingRuntimeKind, TemplateKind } from '~/k8sTypes';
 import { TemplateModel } from '~/api/models';
 import { genRandomChars } from '~/utilities/string';
@@ -52,9 +52,3 @@ export const listTemplates = async (
     queryOptions,
   }).then((listResource) => listResource.items);
 };
-
-export const deleteTemplate = (name: string, namespace: string): Promise<TemplateKind> =>
-  k8sDeleteResource<TemplateKind>({
-    model: TemplateModel,
-    queryOptions: { name, ns: namespace },
-  });

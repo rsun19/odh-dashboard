@@ -9,8 +9,6 @@ import {
 } from '~/concepts/pipelines/kfTypes';
 import { DateRangeString, splitDateRange } from '~/components/dateRange/utils';
 
-export const getLastRun = (runs: PipelineRunKFv2[]): PipelineRunKFv2 | undefined => runs[0];
-
 export const getRunDuration = (run: PipelineRunKFv2): number => {
   const finishedDate = new Date(run.finished_at);
   if (finishedDate.getFullYear() <= 1970) {
@@ -47,38 +45,6 @@ export const getResourceRef = (
   type: ResourceTypeKF,
 ): ResourceReferenceKF | undefined =>
   resource?.resource_references?.find((ref) => ref.key.type === type);
-
-/**
- * @deprecated
- * Uses v1 api where resource references existed
- */
-export const getJobResourceRef = (
-  resource: Parameters<typeof getResourceRef>[0],
-): ResourceReferenceKF | undefined => getResourceRef(resource, ResourceTypeKF.JOB);
-
-/**
- * @deprecated
- * Uses v1 api where resource references existed
- */
-export const getPipelineVersionResourceRef = (
-  resource: PipelineCoreResourceKF | null | undefined,
-): ResourceReferenceKF | undefined => getResourceRef(resource, ResourceTypeKF.PIPELINE_VERSION);
-
-/**
- * @deprecated
- * Uses v1 api where resource references existed
- */
-export const getPipelineResourceRef = (
-  resource: PipelineCoreResourceKF | null,
-): ResourceReferenceKF | undefined => getResourceRef(resource, ResourceTypeKF.PIPELINE);
-
-/**
- * @deprecated
- * Uses v1 api where resource references existed
- */
-export const getExperimentResourceRef = (
-  resource: Parameters<typeof getResourceRef>[0],
-): ResourceReferenceKF | undefined => getResourceRef(resource, ResourceTypeKF.EXPERIMENT);
 
 export const getPipelineRunJobStartTime = (job: PipelineRunJobKFv2): Date | null => {
   const startTime =
