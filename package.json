@@ -24,6 +24,8 @@
     "dev:backend": "cd ./backend && npm run start:dev",
     "dev:frontend": "cd ./frontend && npm run start:dev",
     "format": "prettier --write \"backend/**/*.ts\" \"frontend/**/*.ts\" \"frontend/**/*.tsx\"",
+    "lint-backend": "eslint ./backend/src/",
+    "lint:goal": "eslint --config ./.eslintrc.goal.js --ext .json,.js,.ts,.jsx,.tsx ./frontend/src",
     "make": "make",
     "make:build": "make build",
     "make:deploy": "make deploy",
@@ -37,19 +39,44 @@
     "start:backend": "cd ./backend && npm start",
     "start:frontend": "echo \"...available at ./frontend/public\"",
     "test": "run-s test:backend test:frontend",
+    "test:lint-frontend": "eslint --max-warnings 0 --ext .js,.ts,.jsx,.tsx ./frontend/src",
+    "test:lint-backend": "eslint --max-warnings 0 --ext .json,.js,.ts backend/src/plugins backend/src/routes backend/src/utils",
     "test:backend": "cd ./backend && npm run test",
     "test:frontend": "cd ./frontend && npm run test",
     "test:frontend:coverage": "cd ./frontend && npm run test:coverage",
     "test:cypress-ci": "cd ./frontend && npm run test:cypress-ci -- ",
     "test:unit": "cd ./frontend && npm run test:unit",
     "test:fix": "run-s test:fix-backend test:fix-frontend",
-    "test:fix-backend": "cd ./backend && npm run test:fix",
-    "test:fix-frontend": "cd ./frontend && npm run test:fix"
+    "test:fix-backend": "eslint --ext .json,.js,.ts backend/src/plugins backend/src/routes backend/src/utils --fix",
+    "test:fix-frontend": "eslint --ext .js,.ts,.jsx,.tsx ./frontend/src --fix"
   },
   "dependencies": {
     "dotenv": "^8.2.0",
     "dotenv-expand": "^5.1.0",
     "npm-run-all": "^4.1.5",
     "prettier": "^2.2.1"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.1.1",
+    "@typescript-eslint/parser": "^7.1.1",
+    "babel-eslint": "^10.1.0"
+  },
+  "optionalDependencies": {
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-import-resolver-node": "^0.3.7",
+    "eslint-import-resolver-typescript": "^3.5.3",
+    "eslint-plugin-cypress": "^3.3.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-jsx-a11y": "^6.8.0",
+    "eslint-plugin-no-only-tests": "^3.1.0",
+    "eslint-plugin-no-relative-import-paths": "^1.5.2",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-react": "^7.32.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-config-esnext": "^4.1.0",
+    "eslint-config-node": "^4.1.0",
+    "eslint-plugin-babel": "^5.3.1",
+    "eslint-plugin-node": "^11.1.0"
   }
 }
