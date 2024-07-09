@@ -1,4 +1,4 @@
-import { KubeFastifyInstance } from '../../../types';
+import { K8sStatus, KubeFastifyInstance, OauthFastifyRequest } from '../../../types';
 import { FastifyRequest } from 'fastify';
 import { getUserName } from '../../../utils/userUtils';
 import {
@@ -8,6 +8,9 @@ import {
   KUBE_SAFE_PREFIX,
 } from '../../../utils/adminUtils';
 import { getNotebooks } from '../../../utils/notebookUtils';
+import { V1ResourceAttributes, V1SelfSubjectAccessReview, V1SubjectAccessReview } from '@kubernetes/client-node';
+import { passThroughResource } from '../k8s/pass-through';
+import { getDashboardConfig } from 'utils/resourceUtils';
 
 type AllowedUser = {
   username: string;
@@ -91,4 +94,36 @@ export const getAllowedUsers = async (
     ...adminUsersMap,
   };
   return Object.values(returnUsers);
+};
+
+const createSelfSubjectAccessReview = (
+  fastify: KubeFastifyInstance,
+  request: OauthFastifyRequest,
+  resourceAttributes: V1ResourceAttributes,
+): Promise<V1SubjectAccessReview | K8sStatus> => {
+  const kc = fastify.kube.config;
+  const cluster = kc.getCurrentCluster();
+  const selfSubjectAccessReviewObject: V1SubjectAccessReview = {
+    apiVersion: 'authorization.k8s.io/v1',
+    kind: 'SelfSubjectAccessReview',
+    spec: { resourceAttributes },
+  };
+  return fastify.kube.authorization.createSubjectAccessReview(selfSubjectAccessReviewObject);
+};
+
+const checkAdminPermission = (
+  fastify: KubeFastifyInstance,
+  request: OauthFastifyRequest,
+  username: string,
+): Promise<V1SubjectAccessReview | K8sStatus> => {
+  const config = getDashboardConfig();
+  return createSelfSubjectAccessReview(fastify, request, {
+    group: config.apiVersion.split('/')[0],
+    resource: 'OdhDashboardConfigs',
+    subresource: '',
+    verb: 'update',
+    name: config.metadata.name,
+    namespace: config.metadata.namespace,
+    
+  });
 };

@@ -282,6 +282,7 @@ export type KubeDecorator = KubeStatus & {
   customObjectsApi: k8s.CustomObjectsApi;
   rbac: k8s.RbacAuthorizationV1Api;
   currentToken: string;
+  authorization: k8s.AuthorizationV1Api;
 };
 
 export type KubeFastifyInstance = FastifyInstance & {

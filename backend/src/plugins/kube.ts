@@ -19,6 +19,7 @@ const batchV1Api = kc.makeApiClient(k8s.BatchV1Api);
 const batchV1beta1Api = kc.makeApiClient(k8s.BatchV1beta1Api);
 const currentUser = kc.getCurrentUser();
 const rbac = kc.makeApiClient(k8s.RbacAuthorizationV1Api);
+const authorization = kc.makeApiClient(k8s.AuthorizationV1Api);
 
 export default fp(async (fastify: FastifyInstance) => {
   let namespace;
@@ -80,6 +81,7 @@ export default fp(async (fastify: FastifyInstance) => {
     clusterID,
     clusterBranding,
     rbac,
+    authorization,
   });
 
   // Initialize the watching of resources
