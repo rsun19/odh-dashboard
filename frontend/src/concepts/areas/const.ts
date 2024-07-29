@@ -6,6 +6,7 @@ export const allFeatureFlags: string[] = Object.keys({
   disableInfo: false,
   disableSupport: false,
   disableClusterManager: false,
+  disableConnectionTypes: false,
   disableTracking: false,
   disableBYONImageStream: false,
   disableISVBadges: false,
@@ -44,6 +45,9 @@ export const SupportedAreasStateMap: SupportedAreasState = {
   [SupportedArea.CUSTOM_RUNTIMES]: {
     featureFlags: ['disableCustomServingRuntimes'],
     reliantAreas: [SupportedArea.MODEL_SERVING],
+  },
+  [SupportedArea.CONNECTION_TYPES]: {
+    featureFlags: ['disableConnectionTypes'],
   },
   [SupportedArea.DS_PIPELINES]: {
     featureFlags: ['disablePipelines'],
