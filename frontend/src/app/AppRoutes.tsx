@@ -50,7 +50,7 @@ const ClusterSettingsPage = React.lazy(() => import('../pages/clusterSettings/Cl
 const CustomServingRuntimeRoutes = React.lazy(
   () => import('../pages/modelServing/customServingRuntimes/CustomServingRuntimeRoutes'),
 );
-const ConnectionTypesPage = React.lazy(() => import('../pages/connectionTypes/connectionTypes'));
+const ConnectionTypesPage = React.lazy(() => import('../pages/connectionTypes/ConnectionTypes'));
 const GroupSettingsPage = React.lazy(() => import('../pages/groupSettings/GroupSettings'));
 const LearningCenterPage = React.lazy(() => import('../pages/learningCenter/LearningCenter'));
 const BYONImagesPage = React.lazy(() => import('../pages/BYONImages/BYONImages'));
