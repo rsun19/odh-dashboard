@@ -18,8 +18,8 @@ export const executionColumns: SortableData<ConnectionTypes>[] = [
     sortable: true,
   },
   {
-    label: 'enable',
-    field: 'enable',
+    label: 'Enable',
+    field: 'Enable',
     sortable: true,
   },
 ];
