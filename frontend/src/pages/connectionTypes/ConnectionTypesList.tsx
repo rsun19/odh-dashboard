@@ -18,7 +18,7 @@ const useGetConnectionTypesTable = (): ConnectionTypes[] => [
     name: 'S3 compatible object storage - v1',
     description: 'This is one of the OOTB types provided by Red Hat for you',
     creator: 'Pre-installed',
-    created: '3 months ago',
+    created: '2011-10-05T14:48:00.000',
     enable: true,
   },
 ];
