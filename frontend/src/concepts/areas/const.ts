@@ -6,6 +6,7 @@ export const allFeatureFlags: string[] = Object.keys({
   disableInfo: false,
   disableSupport: false,
   disableClusterManager: false,
+  disableConnectionTypes: false,
   disableTracking: false,
   disableBYONImageStream: false,
   disableISVBadges: false,
