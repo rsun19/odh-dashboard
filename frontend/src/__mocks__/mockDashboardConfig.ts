@@ -148,6 +148,7 @@ export const mockDashboardConfig = ({
       disableISVBadges,
       disableAppLauncher,
       disableUserManagement,
+      disableConnectionTypes: false,
       disableHome,
       disableProjects,
       disableModelServing,
