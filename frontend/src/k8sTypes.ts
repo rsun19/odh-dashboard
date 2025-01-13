@@ -2,6 +2,7 @@ import { K8sResourceCommon, MatchExpression } from '@openshift/dynamic-plugin-sd
 import { EitherNotBoth } from '@openshift/dynamic-plugin-sdk';
 import { AwsKeys } from '~/pages/projects/dataConnections/const';
 import { StackComponent } from '~/concepts/areas/types';
+import { WarningNotification } from '~/pages/hardwareProfiles/utils';
 import {
   ContainerResourceAttributes,
   ContainerResources,
@@ -1252,7 +1253,8 @@ export type HardwareProfileKind = K8sResourceCommon & {
     enabled: boolean;
     description?: string;
     tolerations?: Toleration[];
-    identifiers?: Identifier[];
+    identifiers?: (Identifier & { warning?: boolean })[];
+    warning?: WarningNotification;
     nodeSelectors?: NodeSelector[];
   };
 };

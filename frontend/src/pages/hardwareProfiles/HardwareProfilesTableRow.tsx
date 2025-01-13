@@ -1,6 +1,10 @@
 import * as React from 'react';
 import {
   Divider,
+  Flex,
+  FlexItem,
+  Icon,
+  Popover,
   Stack,
   StackItem,
   Timestamp,
@@ -8,6 +12,7 @@ import {
 } from '@patternfly/react-core';
 import { ActionsColumn, ExpandableRowContent, Tbody, Td, Tr } from '@patternfly/react-table';
 import { useNavigate } from 'react-router-dom';
+import { ExclamationTriangleIcon } from '@patternfly/react-icons';
 import { relativeTime } from '~/utilities/time';
 import { TableRowTitleDescription } from '~/components/table';
 import HardwareProfileEnableToggle from '~/pages/hardwareProfiles/HardwareProfileEnableToggle';
@@ -46,11 +51,30 @@ const HardwareProfilesTableRow: React.FC<HardwareProfilesTableRowProps> = ({
           }}
         />
         <Td dataLabel="Name">
-          <TableRowTitleDescription
-            title={hardwareProfile.spec.displayName}
-            description={hardwareProfile.spec.description}
-            truncateDescriptionLines={2}
-          />
+          <Flex>
+            <FlexItem spacer={{ default: 'spacerSm' }}>
+              <TableRowTitleDescription
+                title={hardwareProfile.spec.displayName}
+                description={hardwareProfile.spec.description}
+                truncateDescriptionLines={2}
+              />
+            </FlexItem>
+            {hardwareProfile.spec.warning?.warning && (
+              <Popover
+                headerIcon={
+                  <Icon status="warning">
+                    <ExclamationTriangleIcon />
+                  </Icon>
+                }
+                headerContent={hardwareProfile.spec.warning.title}
+                bodyContent={hardwareProfile.spec.warning.message}
+              >
+                <Icon status="warning">
+                  <ExclamationTriangleIcon />
+                </Icon>
+              </Popover>
+            )}
+          </Flex>
         </Td>
         <Td dataLabel="Enabled">
           <HardwareProfileEnableToggle

@@ -1,11 +1,11 @@
 import React from 'react';
 import { Td, Tr } from '@patternfly/react-table';
-import { ActionList, ActionListItem, Button } from '@patternfly/react-core';
-import { MinusCircleIcon, PencilAltIcon } from '@patternfly/react-icons';
+import { ActionList, ActionListItem, Button, Flex, FlexItem, Icon } from '@patternfly/react-core';
+import { ExclamationTriangleIcon, MinusCircleIcon, PencilAltIcon } from '@patternfly/react-icons';
 import { Identifier } from '~/types';
 
 type NodeResourceTableRowProps = {
-  identifier: Identifier;
+  identifier: Identifier & { warning?: boolean };
   onDelete: (identifier: Identifier) => void;
   onEdit: (identifier: Identifier) => void;
   showActions: boolean;
@@ -18,7 +18,16 @@ const NodeResourceTableRow: React.FC<NodeResourceTableRowProps> = ({
   showActions,
 }) => (
   <Tr>
-    <Td dataLabel="Resource label">{identifier.displayName}</Td>
+    <Td dataLabel="Resource label">
+      <Flex>
+        <FlexItem spacer={{ default: 'spacerSm' }}>{identifier.displayName}</FlexItem>
+        {identifier.warning && (
+          <Icon status="warning">
+            <ExclamationTriangleIcon />
+          </Icon>
+        )}
+      </Flex>
+    </Td>
     <Td dataLabel="Resource identifier">{identifier.identifier}</Td>
     <Td dataLabel="Resource type">{identifier.resourceType ?? 'Other'}</Td>
     <Td dataLabel="Default">{identifier.defaultCount}</Td>

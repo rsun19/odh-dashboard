@@ -12,6 +12,7 @@ import { HardwareProfileKind, K8sAPIOptions } from '~/k8sTypes';
 import { HardwareProfileModel } from '~/api/models';
 import { applyK8sAPIOptions } from '~/api/apiMergeUtils';
 import { translateDisplayNameForK8s } from '~/concepts/k8s/utils';
+import { hardwareProfileWarning } from '~/pages/hardwareProfiles/utils';
 
 export const listHardwareProfiles = async (namespace: string): Promise<HardwareProfileKind[]> =>
   k8sListResource<HardwareProfileKind>({
@@ -19,7 +20,9 @@ export const listHardwareProfiles = async (namespace: string): Promise<HardwareP
     queryOptions: {
       ns: namespace,
     },
-  }).then((listResource) => listResource.items);
+  })
+    .then((listResource) => listResource.items)
+    .then((items) => hardwareProfileWarning(items));
 
 export const getHardwareProfile = (name: string, namespace: string): Promise<HardwareProfileKind> =>
   k8sGetResource<HardwareProfileKind>({

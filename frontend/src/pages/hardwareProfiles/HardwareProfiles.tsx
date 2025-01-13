@@ -9,6 +9,8 @@ import {
   Title,
   EmptyStateActions,
   EmptyStateFooter,
+  Alert,
+  Stack,
 } from '@patternfly/react-core';
 import { PlusCircleIcon } from '@patternfly/react-icons';
 import { useNavigate } from 'react-router-dom';
@@ -16,6 +18,7 @@ import ApplicationsPage from '~/pages/ApplicationsPage';
 import { useDashboardNamespace } from '~/redux/selectors';
 import { ODH_PRODUCT_NAME } from '~/utilities/const';
 import HardwareProfilesTable from '~/pages/hardwareProfiles/HardwareProfilesTable';
+import { generateWarningMessage } from '~/pages/hardwareProfiles/utils';
 import useHardwareProfiles from './useHardwareProfiles';
 
 const description = `Manage hardware profile settings for users in your organization.`;
@@ -24,8 +27,8 @@ const HardwareProfiles: React.FC = () => {
   const { dashboardNamespace } = useDashboardNamespace();
   const [hardwareProfiles, loaded, loadError, refresh] = useHardwareProfiles(dashboardNamespace);
   const navigate = useNavigate();
-
   const isEmpty = hardwareProfiles.length === 0;
+  const warningMessages = generateWarningMessage(hardwareProfiles);
 
   const noHardwareProfilePageSection = (
     <PageSection isFilled>
@@ -68,10 +71,22 @@ const HardwareProfiles: React.FC = () => {
       emptyStatePage={noHardwareProfilePageSection}
       provideChildrenPadding
     >
-      <HardwareProfilesTable
-        hardwareProfiles={hardwareProfiles}
-        refreshHardwareProfiles={refresh}
-      />
+      <Stack hasGutter>
+        {warningMessages.warning && (
+          <Alert
+            isInline
+            variant="warning"
+            title={warningMessages.title}
+            data-testid="hardware-profiles-error-alert"
+          >
+            <p>{warningMessages.message}</p>
+          </Alert>
+        )}
+        <HardwareProfilesTable
+          hardwareProfiles={hardwareProfiles}
+          refreshHardwareProfiles={refresh}
+        />
+      </Stack>
     </ApplicationsPage>
   );
 };
