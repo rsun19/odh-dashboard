@@ -42,6 +42,81 @@ describe('useHardwareProfile', () => {
     expect(renderResult).hookToBeStable([false, true, true, true]);
   });
 
+  it('should generate warnings for negative min value', async () => {
+    const hardwareProfilesMockNegativeMin = mockK8sResourceList([
+      mockHardwareProfile({
+        uid: 'test-2',
+        identifiers: [
+          {
+            displayName: 'Memory',
+            identifier: 'memory',
+            minCount: '2Gi',
+            maxCount: '5Gi',
+            defaultCount: '2Gi',
+          },
+          {
+            displayName: 'CPU',
+            identifier: 'cpu',
+            minCount: '-1',
+            maxCount: '2',
+            defaultCount: '1',
+            warning: true,
+          },
+        ],
+        warning: {
+          message:
+            'Minimum allowed resource label cannot be negative. Edit the profile to make the profile valid.',
+          title: 'Invalid hardware profile',
+          warningStatus: true,
+        },
+      }),
+    ]);
+    k8sListResourceMock.mockResolvedValue(hardwareProfilesMockNegativeMin);
+    const renderResult = testHook(useHardwareProfiles)('test');
+    await renderResult.waitForNextUpdate();
+    expect(renderResult).hookToStrictEqual(
+      standardUseFetchState(hardwareProfilesMockNegativeMin.items, true),
+    );
+  });
+
+  it('should generate warnings for default value outside of min/max range', async () => {
+    const hardwareProfilesMockNegativeMin = mockK8sResourceList([
+      mockHardwareProfile({
+        uid: 'test-2',
+        identifiers: [
+          {
+            displayName: 'Memory',
+            identifier: 'memory',
+            minCount: '0Gi',
+            maxCount: '5Gi',
+            defaultCount: '6Gi',
+            warning: true,
+          },
+          {
+            displayName: 'CPU',
+            identifier: 'cpu',
+            minCount: '5',
+            maxCount: '10',
+            defaultCount: '2',
+            warning: true,
+          },
+        ],
+        warning: {
+          message:
+            'The default count for resource label must be between the minimum allowed resource label and maximum allowed resource label. Edit the profile to make the profile valid.',
+          title: 'Invalid hardware profile',
+          warningStatus: true,
+        },
+      }),
+    ]);
+    k8sListResourceMock.mockResolvedValue(hardwareProfilesMockNegativeMin);
+    const renderResult = testHook(useHardwareProfiles)('test');
+    await renderResult.waitForNextUpdate();
+    expect(renderResult).hookToStrictEqual(
+      standardUseFetchState(hardwareProfilesMockNegativeMin.items, true),
+    );
+  });
+
   it('should handle errors and rethrow', async () => {
     k8sListResourceMock.mockRejectedValue(new Error('error1'));
 

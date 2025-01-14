@@ -1,11 +1,13 @@
 import { HardwareProfileKind } from '~/k8sTypes';
 import {
   Identifier,
+  IdentifierResourceType,
   NodeSelector,
   Toleration,
   TolerationEffect,
   TolerationOperator,
 } from '~/types';
+import { WarningNotification } from '~/pages/hardwareProfiles/utils';
 import { genUID } from './mockUtils';
 
 type MockResourceConfigType = {
@@ -13,12 +15,13 @@ type MockResourceConfigType = {
   namespace?: string;
   uid?: string;
   displayName?: string;
-  identifiers?: Identifier[];
+  identifiers?: (Identifier & { warning?: boolean })[];
   description?: string;
   enabled?: boolean;
   nodeSelectors?: NodeSelector[];
   tolerations?: Toleration[];
   annotations?: Record<string, string>;
+  warning?: WarningNotification;
 };
 
 export const mockHardwareProfile = ({
@@ -33,6 +36,7 @@ export const mockHardwareProfile = ({
       minCount: '2Gi',
       maxCount: '5Gi',
       defaultCount: '2Gi',
+      resourceType: IdentifierResourceType.MEMORY,
     },
     {
       displayName: 'CPU',
@@ -40,6 +44,7 @@ export const mockHardwareProfile = ({
       minCount: '1',
       maxCount: '2',
       defaultCount: '1',
+      resourceType: IdentifierResourceType.CPU,
     },
   ],
   description = '',
@@ -54,9 +59,14 @@ export const mockHardwareProfile = ({
   nodeSelectors = [
     {
       key: 'test',
-      value: 'va;ue',
+      value: 'value',
     },
   ],
+  warning = {
+    message: '',
+    title: '',
+    warningStatus: false,
+  },
   annotations,
 }: MockResourceConfigType): HardwareProfileKind => ({
   apiVersion: 'dashboard.opendatahub.io/v1alpha1',
@@ -77,5 +87,6 @@ export const mockHardwareProfile = ({
     tolerations,
     nodeSelectors,
     description,
+    warning,
   },
 });

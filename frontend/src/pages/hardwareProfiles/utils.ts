@@ -1,7 +1,7 @@
 import { HardwareProfileKind } from '~/k8sTypes';
 
 export type WarningNotification = {
-  warning: boolean;
+  warningStatus: boolean;
   title: string;
   message: string;
 };
@@ -9,7 +9,41 @@ export type WarningNotification = {
 export const isHardwareProfileOOTB = (hardwareProfile: HardwareProfileKind): boolean =>
   hardwareProfile.metadata.labels?.['opendatahub.io/ootb'] === 'true';
 
+export const generateWarningTitle = (
+  isEnabled: boolean,
+  isAllWarnings: boolean,
+  warningCount: number,
+): string => {
+  if (!isEnabled) {
+    return 'All hardware profiles are disabled';
+  }
+  if (isAllWarnings) {
+    return 'All hardware profiles are invalid';
+  }
+  if (warningCount > 0) {
+    return 'One or more hardware profiles are invalid';
+  }
+  return '';
+};
+
 export const generateWarningMessage = (
+  isEnabled: boolean,
+  isAllWarnings: boolean,
+  warningCount: number,
+): string => {
+  if (!isEnabled) {
+    return 'You must have at least one hardware profile enabled for users to create workbenches or deploy models. Enable one or more profiles in the table below.';
+  }
+  if (isAllWarnings) {
+    return 'You must have at least one valid hardware profile enabled for users to create workbenches or deploy models. Take the appropriate actions below to re-validate your profiles.';
+  }
+  if (warningCount > 0) {
+    return 'One or more of your defined hardware profiles are invalid. Take the appropriate actions below to revalidate your profiles.';
+  }
+  return '';
+};
+
+export const generateWarningForHardwareProfiles = (
   hardwareProfiles: HardwareProfileKind[],
 ): {
   warning: boolean;
@@ -17,18 +51,25 @@ export const generateWarningMessage = (
   message: string;
   isEnabled: boolean;
 } => {
-  const isEnabled = hardwareProfiles.filter((x) => x.spec.enabled === true).length > 0;
+  let isEnabled = false;
+  let warningCount = 0;
+  for (const profile of hardwareProfiles) {
+    if (profile.spec.warning?.warningStatus === true) {
+      warningCount += 1;
+    }
+    if (profile.spec.enabled === true) {
+      isEnabled = true;
+    }
+  }
+
   return {
-    warning:
-      hardwareProfiles.filter((x) => x.spec.warning?.warning === true).length > 0 || !isEnabled,
-    title:
-      isEnabled === true
-        ? 'One or more hardware profiles are invalid'
-        : 'All hardware profiles are invalid.',
-    message:
-      isEnabled === true
-        ? 'One or more of your defined hardware profiles are invalid. Take the appropriate actions below to revalidate your profiles'
-        : 'You must have at least one hardware profile enabled for users to create workbenches or deploy models. Enable one or more profiles in the table below.',
+    warning: warningCount > 0 || !isEnabled,
+    title: generateWarningTitle(isEnabled, warningCount === hardwareProfiles.length, warningCount),
+    message: generateWarningMessage(
+      isEnabled,
+      warningCount === hardwareProfiles.length,
+      warningCount,
+    ),
     isEnabled,
   };
 };
@@ -37,17 +78,19 @@ export const hardwareProfileWarning = (
   hardwareProfiles: HardwareProfileKind[],
 ): HardwareProfileKind[] =>
   hardwareProfiles.map((profile) => {
+    let warningStatus = false;
     const { identifiers } = profile.spec;
+    let parentWarningMessage = '';
     if (typeof identifiers !== 'undefined' && identifiers.length > 0) {
-      let parentWarningMessage = '';
-      identifiers.forEach((identifier) => {
+      for (let identifier of identifiers) {
         if (identifier.minCount > identifier.maxCount) {
           parentWarningMessage += `Minimum allowed ${
             identifier.resourceType ?? 'resource label'
           } cannot exceed maximum allowed ${
             identifier.resourceType ?? 'resource label'
-          }. Edit the profile to make the profile valid. `;
-          return {
+          }. Edit the profile to make the profile valid.`;
+          warningStatus = true;
+          identifier = {
             ...identifier,
             warning: true,
           };
@@ -55,8 +98,9 @@ export const hardwareProfileWarning = (
         if (Number(identifier.minCount) < 0) {
           parentWarningMessage = `Minimum allowed ${
             identifier.resourceType ?? 'resource label'
-          } cannot be negative. Edit the profile to make the profile valid. `;
-          return {
+          } cannot be negative. Edit the profile to make the profile valid.`;
+          warningStatus = true;
+          identifier = {
             ...identifier,
             warning: true,
           };
@@ -65,7 +109,8 @@ export const hardwareProfileWarning = (
           parentWarningMessage = `Maximum allowed ${
             identifier.resourceType ?? 'resource label'
           } cannot be negative. Edit the profile to make the profile valid.`;
-          return {
+          warningStatus = true;
+          identifier = {
             ...identifier,
             warning: true,
           };
@@ -80,26 +125,28 @@ export const hardwareProfileWarning = (
             identifier.resourceType ?? 'resource label'
           } and maximum allowed ${
             identifier.resourceType ?? 'resource label'
-          }. Edit the profile to make the profile valid. `;
-          return {
+          }. Edit the profile to make the profile valid.`;
+          warningStatus = true;
+          identifier = {
             ...identifier,
             warning: true,
           };
         }
-        return {
+        identifier = {
           ...identifier,
           warning: false,
         };
-      });
-      const warningStatus = identifiers.filter((x) => x.warning === true).length > 0;
-      return {
-        ...profile,
+      }
+    }
+    return {
+      ...profile,
+      spec: {
+        ...profile.spec,
         warning: {
-          warning: warningStatus,
+          warningStatus,
           title: warningStatus === true ? 'Invalid hardware profile' : '',
           message: warningStatus === true ? parentWarningMessage : '',
         },
-      };
-    }
-    return profile;
+      },
+    };
   });

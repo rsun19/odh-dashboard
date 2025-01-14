@@ -59,7 +59,7 @@ const HardwareProfilesTableRow: React.FC<HardwareProfilesTableRowProps> = ({
                 truncateDescriptionLines={2}
               />
             </FlexItem>
-            {hardwareProfile.spec.warning?.warning && (
+            {hardwareProfile.spec.warning?.warningStatus && (
               <Popover
                 headerIcon={
                   <Icon status="warning">

@@ -18,7 +18,7 @@ import ApplicationsPage from '~/pages/ApplicationsPage';
 import { useDashboardNamespace } from '~/redux/selectors';
 import { ODH_PRODUCT_NAME } from '~/utilities/const';
 import HardwareProfilesTable from '~/pages/hardwareProfiles/HardwareProfilesTable';
-import { generateWarningMessage } from '~/pages/hardwareProfiles/utils';
+import { generateWarningForHardwareProfiles } from '~/pages/hardwareProfiles/utils';
 import useHardwareProfiles from './useHardwareProfiles';
 
 const description = `Manage hardware profile settings for users in your organization.`;
@@ -28,7 +28,7 @@ const HardwareProfiles: React.FC = () => {
   const [hardwareProfiles, loaded, loadError, refresh] = useHardwareProfiles(dashboardNamespace);
   const navigate = useNavigate();
   const isEmpty = hardwareProfiles.length === 0;
-  const warningMessages = generateWarningMessage(hardwareProfiles);
+  const warningMessages = generateWarningForHardwareProfiles(hardwareProfiles);
 
   const noHardwareProfilePageSection = (
     <PageSection isFilled>
