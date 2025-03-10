@@ -5,9 +5,10 @@ import {
   InputGroup,
   Tooltip,
   InputGroupItem,
-  Alert,
   Popover,
+  Button,
 } from '@patternfly/react-core';
+import { OutlinedQuestionCircleIcon } from '@patternfly/react-icons';
 import { DataConnection } from '~/pages/projects/types';
 import { AwsKeys, PIPELINE_AWS_FIELDS } from '~/pages/projects/dataConnections/const';
 import { FieldListField } from '~/components/FieldList';
@@ -103,13 +104,14 @@ export const ObjectStorageSection = ({
                   </div>
                 }
               >
-                <Alert
-                  variant="info"
-                  isInline
-                  isPlain
-                  title="Where is my data stored within the bucket?"
-                  style={{ width: 'fit-content' }}
-                />
+                <Button
+                  style={{ paddingLeft: 0, width: 'fit-content' }}
+                  icon={<OutlinedQuestionCircleIcon />}
+                  variant="link"
+                  disabled
+                >
+                  Where is my data stored within the bucket?
+                </Button>
               </Popover>
             )}
           </React.Fragment>
