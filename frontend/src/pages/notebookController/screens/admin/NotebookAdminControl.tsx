@@ -13,6 +13,7 @@ import { Table } from '~/components/table';
 import ExternalLink from '~/components/ExternalLink';
 import ApplicationsPage from '~/pages/ApplicationsPage';
 import StopServerModal from '~/pages/notebookController/screens/server/StopServerModal';
+import useStopNotebookModalAvailability from '~/pages/projects/notebook/useStopNotebookModalAvailability';
 import { Notebook } from '~/types';
 import { ODH_PRODUCT_NAME } from '~/utilities/const';
 import { NotebookControllerContext } from '~/pages/notebookController/NotebookControllerContext';
@@ -23,6 +24,7 @@ import useAdminUsers from './useAdminUsers';
 import { NotebookAdminContext } from './NotebookAdminContext';
 
 const NotebookAdminControl: React.FC = () => {
+  const [dontShowModalValue, setDontShowModalValue] = useStopNotebookModalAvailability();
   const [users, loaded, loadError] = useAdminUsers();
   const { serverStatuses, setServerStatuses } = React.useContext(NotebookAdminContext);
   const { currentUserNotebookLink } = React.useContext(NotebookControllerContext);
@@ -116,6 +118,8 @@ const NotebookAdminControl: React.FC = () => {
           notebooksToStop={notebooksToStop}
           onNotebooksStop={onNotebooksStop}
           link={link}
+          dontShowModalValue={dontShowModalValue}
+          setDontShowModalValue={setDontShowModalValue}
         />
       ) : null}
     </ApplicationsPage>

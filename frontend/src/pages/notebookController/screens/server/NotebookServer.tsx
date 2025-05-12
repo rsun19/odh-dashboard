@@ -6,10 +6,14 @@ import ApplicationsPage from '~/pages/ApplicationsPage';
 import { NotebookControllerContext } from '~/pages/notebookController/NotebookControllerContext';
 import ImpersonateAlert from '~/pages/notebookController/screens/admin/ImpersonateAlert';
 import useNotification from '~/utilities/useNotification';
-import NotebookServerDetails from './NotebookServerDetails';
-import StopServerModal from './StopServerModal';
+import useStopNotebookModalAvailability from '~/pages/projects/notebook/useStopNotebookModalAvailability';
 
 import '~/pages/notebookController/NotebookController.scss';
+import { stopNotebook } from '~/services/notebookService';
+import { useUser } from '~/redux/selectors';
+import { allSettledPromises } from '~/utilities/allSettledPromises';
+import StopServerModal from './StopServerModal';
+import NotebookServerDetails from './NotebookServerDetails';
 
 const NotebookServer: React.FC = () => {
   const navigate = useNavigate();
@@ -21,6 +25,9 @@ const NotebookServer: React.FC = () => {
     requestNotebookRefresh,
   } = React.useContext(NotebookControllerContext);
   const [notebooksToStop, setNotebooksToStop] = React.useState<Notebook[]>([]);
+  const [dontShowModalValue, setDontShowModalValue] = useStopNotebookModalAvailability();
+  const { isAdmin } = useUser();
+  const [isDeleting, setDeleting] = React.useState(false);
 
   const onNotebooksStop = React.useCallback(
     (didStop: boolean) => {
@@ -37,6 +44,44 @@ const NotebookServer: React.FC = () => {
 
   const link = currentUserNotebookLink || '#';
 
+  const handleStopServer = () => {
+    setDeleting(true);
+    allSettledPromises<Notebook | void>(
+      notebooksToStop.map((notebookItem) => {
+        const notebookName = notebookItem.metadata.name || '';
+        if (!notebookName) {
+          return Promise.resolve();
+        }
+
+        if (!isAdmin) {
+          return stopNotebook();
+        }
+
+        const notebookUser = notebookItem.metadata.annotations?.['opendatahub.io/username'];
+        if (!notebookUser) {
+          return Promise.resolve();
+        }
+
+        return stopNotebook(notebookUser);
+      }),
+    )
+      .then(() => {
+        setDeleting(false);
+        onNotebooksStop(true);
+      })
+      .catch((e) => {
+        setDeleting(false);
+        notification.error(
+          `Error stopping ${notebooksToStop.length > 1 ? 'workbenches' : 'workbench'}`,
+          e.message,
+        );
+      });
+  };
+
+  if (dontShowModalValue && notebooksToStop.length) {
+    handleStopServer();
+  }
+
   return (
     <>
       <ImpersonateAlert />
@@ -51,11 +96,13 @@ const NotebookServer: React.FC = () => {
         {notebook && (
           <Stack hasGutter>
             <StackItem>
-              {notebooksToStop.length ? (
+              {notebooksToStop.length && !dontShowModalValue ? (
                 <StopServerModal
                   notebooksToStop={notebooksToStop}
                   onNotebooksStop={onNotebooksStop}
                   link={link}
+                  dontShowModalValue={dontShowModalValue}
+                  setDontShowModalValue={setDontShowModalValue}
                 />
               ) : null}
               <ActionList>
@@ -74,8 +121,13 @@ const NotebookServer: React.FC = () => {
                     Access workbench
                   </Button>
                 </ActionListItem>
-                <ActionListItem onClick={() => setNotebooksToStop([notebook])}>
-                  <Button data-testid="stop-wb-button" variant="secondary">
+                <ActionListItem>
+                  <Button
+                    data-testid="stop-wb-button"
+                    variant="secondary"
+                    onClick={() => setNotebooksToStop([notebook])}
+                    isDisabled={isDeleting}
+                  >
                     Stop workbench
                   </Button>
                 </ActionListItem>

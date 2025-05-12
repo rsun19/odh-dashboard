@@ -6,25 +6,27 @@ import { stopNotebook } from '~/services/notebookService';
 import useNotification from '~/utilities/useNotification';
 import { allSettledPromises } from '~/utilities/allSettledPromises';
 import { useUser } from '~/redux/selectors';
-import useStopNotebookModalAvailability from '~/pages/projects/notebook/useStopNotebookModalAvailability';
 
 type StopServerModalProps = {
   notebooksToStop: Notebook[];
   link: string;
   onNotebooksStop: (didStop: boolean) => void;
+  dontShowModalValue: boolean;
+  setDontShowModalValue: (value: boolean) => void;
 };
 
 const StopServerModal: React.FC<StopServerModalProps> = ({
   notebooksToStop,
   onNotebooksStop,
   link,
+  dontShowModalValue,
+  setDontShowModalValue,
 }) => {
   const notification = useNotification();
   const [isDeleting, setDeleting] = React.useState(false);
+  const [isChecked, setIsChecked] = React.useState(dontShowModalValue);
 
   const { isAdmin } = useUser();
-
-  const [dontShowModalValue, setDontShowModalValue] = useStopNotebookModalAvailability();
 
   if (!notebooksToStop.length) {
     return null;
@@ -83,6 +85,9 @@ const StopServerModal: React.FC<StopServerModalProps> = ({
       .then(() => {
         setDeleting(false);
         onNotebooksStop(true);
+        if (isChecked) {
+          setDontShowModalValue(true);
+        }
       })
       .catch((e) => {
         setDeleting(false);
@@ -134,8 +139,8 @@ const StopServerModal: React.FC<StopServerModalProps> = ({
           <Checkbox
             id="dont-show-again"
             label="Don't show again"
-            isChecked={dontShowModalValue}
-            onChange={(e, checked) => setDontShowModalValue(checked)}
+            isChecked={isChecked}
+            onChange={(e, checked) => setIsChecked(checked)}
           />
         </StackItem>
       </Stack>
