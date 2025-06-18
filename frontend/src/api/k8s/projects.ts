@@ -84,10 +84,11 @@ export const createProject = (
 
             resolve(projectName);
           })
-          .catch(throwErrorFromAxios)
-          .catch(reject);
+          .catch(throwErrorFromAxios);
       })
-      .catch(reject);
+      .catch((e: unknown) => {
+        reject(e);
+      });
   });
 };
 

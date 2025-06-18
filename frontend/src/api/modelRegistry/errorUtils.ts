@@ -12,7 +12,7 @@ export const handleModelRegistryFailures = <T>(promise: Promise<T>): Promise<T> 
       }
       return result;
     })
-    .catch((e) => {
+    .catch((e: unknown) => {
       if (isError(e)) {
         throw new Error(e.message);
       }

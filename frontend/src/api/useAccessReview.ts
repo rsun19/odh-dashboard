@@ -34,7 +34,7 @@ export const checkAccess = ({
     resource: selfSubjectAccessReview,
   })
     .then((result) => result.status?.allowed ?? true)
-    .catch((e) => {
+    .catch((e: unknown) => {
       // eslint-disable-next-line no-console
       console.warn('SelfSubjectAccessReview failed', e);
       return true; // if it critically fails, don't block SSAR checks; let it fail/succeed on future calls

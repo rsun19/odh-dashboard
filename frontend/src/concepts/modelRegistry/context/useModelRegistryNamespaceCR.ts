@@ -8,6 +8,7 @@ import useFetchState, {
   FetchStateCallbackPromise,
   NotReadyError,
 } from '#~/utilities/useFetchState';
+import { isK8sStatusError } from '#~/utilities/utils.ts';
 
 type State = ModelRegistryKind | null;
 
@@ -33,8 +34,8 @@ export const useModelRegistryNamespaceCR = (
         return Promise.reject(new NotReadyError('No registries namespace could be found'));
       }
 
-      return getModelRegistryCR(namespace, name, opts).catch((e) => {
-        if (e.statusObject?.code === 404) {
+      return getModelRegistryCR(namespace, name, opts).catch((e: unknown) => {
+        if (isK8sStatusError(e) && e.statusObject.code === 404) {
           // Not finding is okay, not an error
           return null;
         }

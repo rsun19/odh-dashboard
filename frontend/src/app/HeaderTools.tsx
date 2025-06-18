@@ -22,6 +22,7 @@ import { updateImpersonateSettings } from '#~/services/impersonateService';
 import { AppNotification } from '#~/redux/types';
 import { useAppSelector } from '#~/redux/hooks';
 import AboutDialog from '#~/app/AboutDialog';
+import { ensureError } from '#~/utilities/utils';
 import AppLauncher from './AppLauncher';
 import { useAppContext } from './AppContext';
 import { useThemeContext } from './ThemeContext';
@@ -78,7 +79,9 @@ const HeaderTools: React.FC<HeaderToolsProps> = ({ onNotificationsClick }) => {
         onClick={() => {
           updateImpersonateSettings(true)
             .then(() => location.reload())
-            .catch((e) => notification.error('Failed impersonating user', e.message));
+            .catch((e: unknown) =>
+              notification.error('Failed impersonating user', ensureError(e).message),
+            );
         }}
       >
         Start impersonate
@@ -216,7 +219,9 @@ const HeaderTools: React.FC<HeaderToolsProps> = ({ onNotificationsClick }) => {
                 onClick={() =>
                   updateImpersonateSettings(false)
                     .then(() => location.reload())
-                    .catch((e) => notification.error('Failed stopping impersonating', e.message))
+                    .catch((e: unknown) =>
+                      notification.error('Failed stopping impersonating', ensureError(e).message),
+                    )
                 }
               >
                 Stop impersonate

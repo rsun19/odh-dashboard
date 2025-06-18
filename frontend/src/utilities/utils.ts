@@ -8,6 +8,7 @@ import {
 } from '#~/types';
 import { AcceleratorProfileKind } from '#~/k8sTypes';
 import { CATEGORY_ANNOTATION, DASHBOARD_MAIN_CONTAINER_ID, ODH_PRODUCT_NAME } from './const';
+import { isK8sStatus, K8sStatusError } from '#~/api/errorUtils.ts';
 
 export const makeCardVisible = (id: string): void => {
   setTimeout(() => {
@@ -243,4 +244,21 @@ export const safeExecute = <T>(
     );
     return defaultValue;
   }
+};
+
+export const ensureError = (error: unknown, message?: string): Error => {
+  if (error instanceof Error) {
+    return error;
+  }
+  return new Error(message);
+};
+
+export const isK8sStatusError = (error: unknown): error is K8sStatusError =>
+  error instanceof K8sStatusError;
+
+export const ensureK8sStatusError = (error: unknown, message?: string): Error => {
+  if (isK8sStatusError(error)) {
+    return error;
+  }
+  return ensureError(error, message);
 };

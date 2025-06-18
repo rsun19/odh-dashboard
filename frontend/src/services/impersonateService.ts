@@ -1,3 +1,4 @@
+import { throwErrorFromAxios } from '#~/api/errorUtils';
 import axios from '#~/utilities/axios';
 
 export const updateImpersonateSettings = (impersonate: boolean): Promise<void> => {
@@ -5,7 +6,7 @@ export const updateImpersonateSettings = (impersonate: boolean): Promise<void> =
   return axios
     .post(url, { impersonate })
     .then((response) => response.data)
-    .catch((e) => {
-      throw new Error(e.response.data.message);
+    .catch((e: unknown) => {
+      throw throwErrorFromAxios(e);
     });
 };

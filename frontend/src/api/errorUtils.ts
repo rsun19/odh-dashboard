@@ -15,14 +15,14 @@ export class K8sStatusError extends Error {
 }
 
 const isAxiosErrorWithResponseMessage = (
-  error?: Error | AxiosError,
+  error?: unknown,
 ): error is AxiosError<{ message: string }> =>
   Boolean(
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     error && typeof (error as AxiosError<{ message: string }>).response?.data.message === 'string',
   );
 
-export const throwErrorFromAxios = (error: Error | AxiosError): never => {
+export const throwErrorFromAxios = (error: unknown): never => {
   if (isAxiosErrorWithResponseMessage(error)) {
     throw new Error(error.response?.data.message);
   }

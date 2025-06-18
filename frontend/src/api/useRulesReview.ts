@@ -38,7 +38,7 @@ export const useRulesReview = (
         }
         setLoaded(true);
       })
-      .catch((e) => {
+      .catch((e: unknown) => {
         // eslint-disable-next-line no-console
         console.warn('SelfSubjectRulesReview failed', e);
         setLoaded(true);

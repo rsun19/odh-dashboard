@@ -20,7 +20,7 @@ const useKserveMetricsConfigMap = (
           }
           return c;
         })
-        .catch((e) => {
+        .catch((e: unknown) => {
           throw e;
         }),
     [modelName, namespace],

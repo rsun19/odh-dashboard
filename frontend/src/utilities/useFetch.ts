@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { K8sAPIOptions } from '#~/k8sTypes';
+import { ensureError } from './utils';
 
 /**
  * Allows "I'm not ready" rejections if you lack a lazy provided prop
@@ -15,15 +16,17 @@ export class NotReadyError extends Error {
 /**
  * Checks to see if it's a standard error handled by useStateFetch .catch block.
  */
-export const isCommonStateError = (e: Error): boolean => {
-  if (e.name === 'NotReadyError') {
-    // An escape hatch for callers to reject the call at this fetchCallbackPromise reference
-    // Re-compute your callback to re-trigger again
-    return true;
-  }
-  if (e.name === 'AbortError') {
-    // Abort errors are silent
-    return true;
+export const isCommonStateError = (e: unknown): boolean => {
+  if (e instanceof Error) {
+    if (e.name === 'NotReadyError') {
+      // An escape hatch for callers to reject the call at this fetchCallbackPromise reference
+      // Re-compute your callback to re-trigger again
+      return true;
+    }
+    if (e.name === 'AbortError') {
+      // Abort errors are silent
+      return true;
+    }
   }
 
   return false;
@@ -181,7 +184,7 @@ const useFetch = <Type>(
 
           return r;
         })
-        .catch((e) => {
+        .catch((e: unknown) => {
           changePendingRef.current = false;
           if (alreadyAborted) {
             return undefined;
@@ -190,7 +193,7 @@ const useFetch = <Type>(
           if (isCommonStateError(e)) {
             return undefined;
           }
-          setLoadError(e);
+          setLoadError(ensureError(e));
           return undefined;
         });
 

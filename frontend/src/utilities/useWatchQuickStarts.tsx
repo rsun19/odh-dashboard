@@ -3,6 +3,7 @@ import { QuickStart } from '@patternfly/quickstarts';
 import { fetchQuickStarts } from '#~/services/quickStartsService';
 import { POLL_INTERVAL } from './const';
 import { useDeepCompareMemoize } from './useDeepCompareMemoize';
+import { ensureError } from './utils';
 
 export const useWatchQuickStarts = (): {
   quickStarts: QuickStart[];
@@ -22,8 +23,8 @@ export const useWatchQuickStarts = (): {
           setLoadError(undefined);
           setQuickStarts(updatedQuickStarts);
         })
-        .catch((e) => {
-          setLoadError(e);
+        .catch((e: unknown) => {
+          setLoadError(ensureError(e));
         });
       watchHandle = setTimeout(watchQuickStarts, POLL_INTERVAL);
     };

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { AxiosError } from 'axios';
+import { AxiosError, isAxiosError } from 'axios';
 import { DashboardConfigKind } from '#~/k8sTypes';
 import { POLL_INTERVAL } from '#~/utilities/const';
 import { useDeepCompareMemoize } from '#~/utilities/useDeepCompareMemoize';
@@ -25,8 +25,11 @@ export const useApplicationSettings = (): {
           setLoaded(true);
           setLoadError(undefined);
         })
-        .catch((e) => {
-          if (e?.response?.data?.message?.includes('Error getting Oauth Info for user')) {
+        .catch((e: unknown) => {
+          if (
+            isAxiosError(e) &&
+            e.response?.data?.message?.includes('Error getting Oauth Info for user')
+          ) {
             // NOTE: this endpoint only requests oauth because of the security layer, this is not an ironclad use-case
             // Something went wrong on the server with the Oauth, let us just log them out and refresh for them
             /* eslint-disable-next-line no-console */
@@ -37,7 +40,7 @@ export const useApplicationSettings = (): {
             );
             return;
           }
-          setLoadError(e);
+          setLoadError(isAxiosError(e) ? e : new AxiosError());
         }),
     [],
   );
@@ -55,8 +58,11 @@ export const useApplicationSettings = (): {
           setLoaded(true);
           setLoadError(undefined);
         })
-        .catch((e) => {
-          if (e?.response?.data?.message?.includes('Error getting Oauth Info for user')) {
+        .catch((e: unknown) => {
+          if (
+            isAxiosError(e) &&
+            e.response?.data?.message?.includes('Error getting Oauth Info for user')
+          ) {
             // NOTE: this endpoint only requests oauth because of the security layer, this is not an ironclad use-case
             // Something went wrong on the server with the Oauth, let us just log them out and refresh for them
             /* eslint-disable-next-line no-console */
@@ -68,7 +74,7 @@ export const useApplicationSettings = (): {
             setRefreshMarker(new Date());
             return;
           }
-          setLoadError(e);
+          setLoadError(isAxiosError(e) ? e : new AxiosError());
         });
       watchHandle = setTimeout(watchDashboardConfig, POLL_INTERVAL);
     };

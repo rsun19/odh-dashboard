@@ -187,6 +187,7 @@ module.exports = {
         allowArray: true,
       },
     ],
+    '@typescript-eslint/use-unknown-in-catch-callback-variable': 'error',
     'react-hooks/exhaustive-deps': 'error',
     'prefer-destructuring': [
       'error',

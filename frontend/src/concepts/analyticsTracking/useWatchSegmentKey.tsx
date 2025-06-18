@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { POLL_INTERVAL } from '#~/utilities/const';
 import { ODHSegmentKey } from '#~/concepts/analyticsTracking/trackingProperties';
+import { ensureError } from '#~/utilities/utils';
 import { fetchSegmentKey } from './segmentKeyService';
 
 export const useWatchSegmentKey = (): {
@@ -21,8 +22,8 @@ export const useWatchSegmentKey = (): {
           setLoadError(undefined);
           setSegmentKey(updatedSegmentKey.segmentKey);
         })
-        .catch((e) => {
-          setLoadError(e);
+        .catch((e: unknown) => {
+          setLoadError(ensureError(e));
         });
       watchHandle = setTimeout(watchSegmentKey, POLL_INTERVAL);
     };

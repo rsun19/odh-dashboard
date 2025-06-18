@@ -27,7 +27,7 @@ import { ODH_PRODUCT_NAME } from '#~/utilities/const';
 import { useAppContext } from '#~/app/AppContext';
 import { useAppDispatch } from '#~/redux/hooks';
 import { SupportedArea, useIsAreaAvailable } from '#~/concepts/areas';
-import { isInternalRouteIntegrationsApp } from '#~/utilities/utils';
+import { ensureError, isInternalRouteIntegrationsApp } from '#~/utilities/utils';
 import { deleteIntegrationApp } from '#~/services/integrationAppService';
 import { useUser } from '#~/redux/selectors';
 import { useQuickStartCardSelected } from './useQuickStartCardSelected';
@@ -93,7 +93,9 @@ const OdhAppCard: React.FC<OdhAppCardProps> = ({ odhApp }) => {
             throw new Error(response.error);
           }
         })
-        .catch(handleError);
+        .catch((e: unknown) => {
+          handleError(ensureError(e));
+        });
     } else {
       removeComponent(odhApp.metadata.name)
         .then((response) => {
@@ -103,7 +105,9 @@ const OdhAppCard: React.FC<OdhAppCardProps> = ({ odhApp }) => {
             throw new Error(response.error);
           }
         })
-        .catch(handleError);
+        .catch((e: unknown) => {
+          handleError(ensureError(e));
+        });
     }
   };
 

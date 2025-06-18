@@ -3,6 +3,7 @@ import type { ProjectKind } from '@odh-dashboard/internal/k8sTypes';
 import { ResolvedExtension } from '@openshift/dynamic-plugin-sdk';
 import { addSupportServingPlatformProject } from '@odh-dashboard/internal/api/k8s/projects';
 import { NamespaceApplicationCase } from '@odh-dashboard/internal/pages/projects/types';
+import { ensureError } from '@odh-dashboard/internal/utilities/utils';
 import { ModelServingPlatformExtension } from '../../extension-points';
 
 export type ModelServingPlatform = ResolvedExtension<ModelServingPlatformExtension>;
@@ -55,8 +56,8 @@ export const useProjectServingPlatform = (
       addSupportServingPlatformProject(
         project.metadata.name,
         platformToEnable.properties.manage.namespaceApplicationCase,
-      ).catch((e) => {
-        setProjectPlatformError(e.message);
+      ).catch((e: unknown) => {
+        setProjectPlatformError(ensureError(e).message);
         setNewProjectPlatformLoading(undefined);
       });
     },
@@ -70,8 +71,8 @@ export const useProjectServingPlatform = (
     addSupportServingPlatformProject(
       project.metadata.name,
       NamespaceApplicationCase.RESET_MODEL_SERVING_PLATFORM,
-    ).catch((e) => {
-      setProjectPlatformError(e.message);
+    ).catch((e: unknown) => {
+      setProjectPlatformError(ensureError(e).message);
       setNewProjectPlatformLoading(undefined);
     });
   }, [project]);

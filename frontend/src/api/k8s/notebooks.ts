@@ -296,7 +296,9 @@ export const createNotebook = (
       .then((fetchedNotebook) => {
         resolve(fetchedNotebook);
       })
-      .catch(reject);
+      .catch((e: unknown) => {
+        reject(e);
+      });
   });
 
 export const updateNotebook = (
@@ -576,9 +578,13 @@ export const updateNotebookPVC = (
           ),
         )
           .then(resolve)
-          .catch(reject);
+          .catch((e: unknown) => {
+            reject(e);
+          });
       })
-      .catch(reject);
+      .catch((e: unknown) => {
+        reject(e);
+      });
   });
 
 export const removeNotebookPVC = (
@@ -625,9 +631,13 @@ export const removeNotebookPVC = (
           ),
         )
           .then(resolve)
-          .catch(reject);
+          .catch((e: unknown) => {
+            reject(e);
+          });
       })
-      .catch(reject);
+      .catch((e: unknown) => {
+        reject(e);
+      });
   });
 
 export const removeNotebookSecret = (
@@ -658,9 +668,13 @@ export const removeNotebookSecret = (
           patches,
         })
           .then(resolve)
-          .catch(reject);
+          .catch((e: unknown) => {
+            reject(e);
+          });
       })
-      .catch(reject);
+      .catch((e: unknown) => {
+        reject(e);
+      });
   });
 
 export const restartNotebook = (

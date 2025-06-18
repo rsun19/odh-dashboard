@@ -39,7 +39,7 @@ export const handlePipelineFailures = <T>(promise: Promise<T>): Promise<T> =>
 
       return result;
     })
-    .catch((e) => {
+    .catch((e: unknown) => {
       if (isErrorKF(e)) {
         throw new Error(e.error);
       }

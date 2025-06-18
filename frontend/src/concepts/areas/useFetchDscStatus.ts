@@ -1,6 +1,8 @@
+import { isAxiosError } from 'axios';
 import axios from '#~/utilities/axios';
 import useFetchState, { FetchState } from '#~/utilities/useFetchState';
 import { DataScienceClusterKindStatus } from '#~/k8sTypes';
+import { throwErrorFromAxios } from '#~/api/errorUtils.ts';
 
 /**
  * Should only return `null` when on v1 Operator.
@@ -10,12 +12,12 @@ const fetchDscStatus = (): Promise<DataScienceClusterKindStatus | null> => {
   return axios
     .get(url)
     .then((response) => response.data)
-    .catch((e) => {
+    .catch((e: unknown) => {
       // Handle 404 errors specifically to maintain backward compatibility with tests
-      if (e.response?.status === 404) {
+      if (isAxiosError(e) && e.response?.status === 404) {
         return null;
       }
-      throw new Error(e.response?.data?.message || e.message);
+      throw throwErrorFromAxios(e);
     });
 };
 
