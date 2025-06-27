@@ -24,3 +24,5 @@ export const DeployButton: React.FC<{
   }
   return <>{deployButton}</>;
 };
+
+export default DeployButton;

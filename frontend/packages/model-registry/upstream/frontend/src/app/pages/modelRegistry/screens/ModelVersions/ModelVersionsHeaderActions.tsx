@@ -13,6 +13,8 @@ import { ModelRegistryContext } from '~/app/context/ModelRegistryContext';
 import { ModelRegistrySelectorContext } from '~/app/context/ModelRegistrySelectorContext';
 import { ArchiveRegisteredModelModal } from '~/app/pages/modelRegistry/screens/components/ArchiveRegisteredModelModal';
 import { registeredModelsUrl } from '~/app/pages/modelRegistry/screens/routeUtils';
+import { isModelRegistryDeployButtonExtension } from '@odh-dashboard/model-registry/extension-points';
+import { useExtensions } from '@odh-dashboard/plugin-core';
 
 interface ModelVersionsHeaderActionsProps {
   rm: RegisteredModel;
@@ -30,10 +32,16 @@ const ModelVersionsHeaderActions: React.FC<ModelVersionsHeaderActionsProps> = ({
   const [isOpen, setOpen] = React.useState(false);
   const tooltipRef = React.useRef<HTMLButtonElement>(null);
   const [isArchiveModalOpen, setIsArchiveModalOpen] = React.useState(false);
+  const extensions = useExtensions(isModelRegistryDeployButtonExtension);
+
+  console.log(extensions);
 
   return (
     <>
       <Flex>
+        <FlexItem>
+          {/* {extensions.map(ext => ext)} */}
+        </FlexItem>
         <FlexItem>
           <Dropdown
             isOpen={isOpen}
