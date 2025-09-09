@@ -12,6 +12,9 @@ import {
 } from '@patternfly/react-core';
 import { DashboardModalFooter } from 'mod-arch-shared';
 import { useNotification } from '~/app/hooks/useNotification';
+import { useResolvedExtensions } from '@odh-dashboard/plugin-core';
+import { TrackingOutcome } from '@odh-dashboard/internal/concepts/analyticsTracking/trackingProperties';
+import { isModelRegistryFormTrackingExtension } from '~/odh/extension-points';
 
 interface ArchiveRegisteredModelModalProps {
   onCancel: () => void;
@@ -19,6 +22,7 @@ interface ArchiveRegisteredModelModalProps {
   registeredModelName: string;
 }
 
+const eventName = 'Registered Model Archived';
 export const ArchiveRegisteredModelModal: React.FC<ArchiveRegisteredModelModalProps> = ({
   onCancel,
   onSubmit,
@@ -29,30 +33,47 @@ export const ArchiveRegisteredModelModal: React.FC<ArchiveRegisteredModelModalPr
   const [error, setError] = React.useState<Error>();
   const [confirmInputValue, setConfirmInputValue] = React.useState('');
   const isDisabled = confirmInputValue.trim() !== registeredModelName || isSubmitting;
+  const [extensions] = useResolvedExtensions(isModelRegistryFormTrackingExtension);
 
   const onClose = React.useCallback(() => {
     setConfirmInputValue('');
     onCancel();
   }, [onCancel]);
 
+  const onCancelClose = React.useCallback(() => {
+    extensions.map((extension) => extension.properties.fireFormTrackingEvent(eventName, {
+      outcome: TrackingOutcome.cancel,
+    }));
+    onClose();
+  }, [onClose]);
+
   const onConfirm = React.useCallback(async () => {
     setIsSubmitting(true);
 
     try {
       await onSubmit();
+      extensions.map((extension) => extension.properties.fireFormTrackingEvent(eventName, {
+        outcome: TrackingOutcome.submit,
+        success: true,
+      }));
       onClose();
       notification.success(`${registeredModelName} and all its versions archived.`);
     } catch (e) {
       if (e instanceof Error) {
         setError(e);
       }
+      extensions.map((extension) => extension.properties.fireFormTrackingEvent(eventName, {
+        outcome: TrackingOutcome.submit,
+        success: false,
+        error: e instanceof Error ? e.message : 'unknown error',
+      }));
     } finally {
       setIsSubmitting(false);
     }
   }, [onSubmit, onClose, notification, registeredModelName]);
 
   return (
-    <Modal isOpen variant="small" onClose={onClose} data-testid="archive-registered-model-modal">
+    <Modal isOpen variant="small" onClose={onCancelClose} data-testid="archive-registered-model-modal">
       <ModalHeader title="Archive model?" titleIconVariant="warning" />
       <ModalBody>
         <Stack hasGutter>
@@ -83,7 +104,7 @@ export const ArchiveRegisteredModelModal: React.FC<ArchiveRegisteredModelModalPr
       </ModalBody>
       <ModalFooter>
         <DashboardModalFooter
-          onCancel={onClose}
+          onCancel={onCancelClose}
           onSubmit={onConfirm}
           submitLabel="Archive"
           isSubmitLoading={isSubmitting}

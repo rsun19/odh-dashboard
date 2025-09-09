@@ -27,7 +27,11 @@ import RegistrationFormFooter from './RegistrationFormFooter';
 import { SubmitLabel } from './const';
 import PrefilledModelRegistryField from './PrefilledModelRegistryField';
 import RegisterModelDetailsFormSection from './RegisterModelDetailsFormSection';
+import { TrackingOutcome } from '@odh-dashboard/internal/concepts/analyticsTracking/trackingProperties';
+import { isModelRegistryFormTrackingExtension } from '~/odh/extension-points';
+import { useResolvedExtensions } from '@odh-dashboard/plugin-core';
 
+const eventName = 'Model Registered';
 const RegisterModel: React.FC = () => {
   const { modelRegistry: mrName } = useParams();
   const navigate = useNavigate();
@@ -45,7 +49,7 @@ const RegisterModel: React.FC = () => {
   );
   const [registeredModels, registeredModelsLoaded, registeredModelsLoadError] =
     useRegisteredModels();
-
+  const [extensions] = useResolvedExtensions(isModelRegistryFormTrackingExtension);
   const isModelNameValid = isNameValid(formData.modelName);
   const isModelNameDuplicate = isModelNameExisting(formData.modelName, registeredModels);
   const hasModelNameError = !isModelNameValid || isModelNameDuplicate;
@@ -61,8 +65,18 @@ const RegisterModel: React.FC = () => {
       errors,
     } = await registerModel(apiState, formData, author);
     if (registeredModel && modelVersion && modelArtifact) {
+      extensions.map((extension) => extension.properties.fireFormTrackingEvent(eventName, {
+        outcome: TrackingOutcome.submit,
+        success: true,
+        locationType: formData.modelLocationType,
+      }));
       navigate(modelVersionUrl(modelVersion.id, registeredModel.id, mrName));
     } else if (Object.keys(errors).length > 0) {
+      extensions.map((extension) => extension.properties.fireFormTrackingEvent(eventName, {
+        outcome: TrackingOutcome.submit,
+        success: false,
+        locationType: formData.modelLocationType,
+      }));
       setIsSubmitting(false);
       setSubmittedRegisteredModelName(formData.modelName);
       setSubmittedVersionName(formData.versionName);
@@ -72,6 +86,9 @@ const RegisterModel: React.FC = () => {
     }
   };
   const onCancel = () => {
+    extensions.map((extension) => extension.properties.fireFormTrackingEvent(eventName, {
+      outcome: TrackingOutcome.cancel,
+    }));
     navigate(modelRegistryUrl(mrName));
   };
 

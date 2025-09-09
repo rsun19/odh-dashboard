@@ -3,11 +3,12 @@ import type {
   RouteExtension,
   AreaExtension,
 } from '@odh-dashboard/plugin-core/extension-points';
+import type { ModelRegistryFormTrackingExtension } from './extension-points';
 
 const reliantAreas = ['model-registry'];
 const PLUGIN_MODEL_REGISTRY = 'model-registry-plugin';
 
-const extensions: (NavExtension | RouteExtension | AreaExtension)[] = [
+const extensions: (NavExtension | RouteExtension | AreaExtension | ModelRegistryFormTrackingExtension)[] = [
   {
     type: 'app.area',
     properties: {
@@ -83,6 +84,15 @@ const extensions: (NavExtension | RouteExtension | AreaExtension)[] = [
     properties: {
       path: '/model-registry-settings/*',
       component: () => import('./ModelRegistrySettingsRoutesWrapper'),
+    },
+  },
+  {
+    type: 'model-registry.form-tracking',
+    properties: {
+      fireFormTrackingEvent: () => import('@odh-dashboard/internal/concepts/analyticsTracking/segmentIOUtils').then((m) => m.fireFormTrackingEvent),
+    },
+    flags: {
+      required: [PLUGIN_MODEL_REGISTRY],
     },
   },
 ];
