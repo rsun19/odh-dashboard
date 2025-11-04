@@ -1,0 +1,37 @@
+{
+  "private": true,
+  "name": "@odh-dashboard/mlflow-poc",
+  "description": "MLflow proof of concept plugin",
+  "version": "0.0.0",
+  "scripts__options": {
+    "lint": "eslint .",
+    "test-unit": "jest --silent",
+    "test-unit-coverage": "jest --silent --coverage",
+    "type-check": "tsc --noEmit"
+  },
+  "exports": {
+    "./extensions": "./extensions/index.ts",
+    "./extension-points": "./extension-points/index.ts",
+    "./components/*": [
+      "./src/components/*",
+      "./src/components/*.ts",
+      "./src/components/*.d.ts",
+      "./src/components/*.tsx"
+    ]
+  },
+  "dependencies": {
+    "@odh-dashboard/internal": "*",
+    "@odh-dashboard/plugin-core": "*",
+    "@databricks/design-system": "^1.12.21",
+    "@tanstack/react-table": "^8.8.2",
+    "react-virtualized": "^9.21.2",
+    "@types/react-virtualized": "^9.21.9",
+    "react-intl": "^6.0.4",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "@odh-dashboard/eslint-config": "*",
+    "@odh-dashboard/jest-config": "*",
+    "@odh-dashboard/tsconfig": "*"
+  }
+}
