@@ -6,7 +6,7 @@ const GlobalMLflowPage: React.FC = () => {
     <ApplicationsPage loaded empty={false} title="MLflow Experiments">
       <iframe
         title="MLflow Experiments"
-        src="http://localhost:5000/#/experiments"
+        src="http://localhost:5000/#/experiments?embedding=true"
         style={{
           width: '100%',
           height: '100%',
