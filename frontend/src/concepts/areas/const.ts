@@ -5,6 +5,7 @@ export const techPreviewFlags = {
   disableModelRegistry: true,
   genAiStudio: false,
   modelAsService: false,
+  mlflow: false,
 } satisfies Partial<DashboardCommonConfig>;
 
 export const devTemporaryFeatureFlags = {
