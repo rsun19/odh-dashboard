@@ -196,6 +196,9 @@ export const SupportedAreasStateMap: SupportedAreasState = {
   [SupportedArea.MODEL_TRAINING]: {
     featureFlags: ['modelTraining'],
   },
+  [SupportedArea.MLFLOW]: {
+    featureFlags: ['mlflow'],
+  },
 };
 
 /** Maps each DataScienceStackComponent to its human-readable name **/
