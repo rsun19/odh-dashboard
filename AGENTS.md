@@ -79,6 +79,7 @@ Before performing certain tasks, read and follow the corresponding specialized r
 
 | Task                  | Rule File                                                                    | Trigger                                                                      |
 | --------------------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| **Documentation**     | [docs/agent-rules/generate-docs.md](docs/agent-rules/generate-docs.md)       | When asked to generate or create package documentation specifically for AI agents                       |
 | **Jira Creation**     | [docs/agent-rules/jira-creation.md](docs/agent-rules/jira-creation.md)       | When asked to create Jira issues, tickets, bugs, stories, tasks, or epics    |
 | **Contract Tests**    | [docs/agent-rules/contract-tests.md](docs/agent-rules/contract-tests.md)     | When working on contract tests or BFF API validation                         |
 | **Cypress E2E Tests** | [docs/agent-rules/cypress-e2e.md](docs/agent-rules/cypress-e2e.md)           | When creating or modifying E2E tests, Robot Framework migrations             |
@@ -86,3 +87,14 @@ Before performing certain tasks, read and follow the corresponding specialized r
 | **Unit Tests**        | [docs/agent-rules/unit-tests.md](docs/agent-rules/unit-tests.md)             | When creating or modifying Jest unit tests for utilities, hooks, or components |
 
 **Important**: Always read the relevant rule file before starting the task to ensure you follow the project's conventions and patterns.
+
+### Package-Specific Documentation Rules
+
+When working on documentation for specific packages, check for package-specific `generate-docs.md` files in these locations:
+- `frontend/docs/generate-docs.md` - for frontend documentation tasks
+- `backend/docs/generate-docs.md` - for backend documentation tasks  
+- `packages/*/docs/generate-docs.md` - for individual package documentation tasks
+
+**Available packages**: app-config, autorag, contract-tests, cypress, eslint-config, eslint-plugin, feature-store, gen-ai, jest-config, kserve, llmd-serving, lm-eval, maas, mlflow-poc, model-registry, model-serving-backport, model-serving, model-training, notebooks, observability, plugin-core, plugin-template, tsconfig
+
+These files contain package-specific rules that supplement the main documentation rules.
