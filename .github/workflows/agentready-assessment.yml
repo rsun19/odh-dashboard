@@ -1,0 +1,43 @@
+name: AgentReady Assessment
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Run weekly on Monday at 9:00 UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  assess:
+    name: Repository Assessment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install AgentReady
+        run: pip install agentready
+
+      - name: Run assessment
+        run: agentready assess . --output .agentready/
+
+      - name: Upload assessment report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: agentready-assessment
+          path: .agentready/
+          retention-days: 30
