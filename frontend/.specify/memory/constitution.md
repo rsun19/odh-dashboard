@@ -1,10 +1,10 @@
 <!--
 Sync Impact Report:
-- Version change: none → 1.0.0
-- Modified principles: Initial constitution creation
-- Added sections: All sections are new
-- Removed sections: None
-- Templates requiring updates: ✅ All templates reviewed and validated
+- Version change: 1.0.0 (initial)
+- Modified principles: Initial creation with 5 core principles
+- Added sections: Development Standards, Quality Assurance
+- Removed sections: N/A (initial creation)
+- Templates requiring updates: ✅ All templates validated for consistency
 - Follow-up TODOs: None
 -->
 
@@ -12,56 +12,41 @@ Sync Impact Report:
 
 ## Core Principles
 
-### I. PatternFly-First UI Development
+### I. TypeScript-First Development
+Strict typing is MANDATORY for all code. Use explicit type definitions with complete interfaces. Objects and functions MUST have clearly defined input and output types. Type assertions are PROHIBITED under ALL circumstances. All custom React hooks MUST have strict typing for inputs and outputs, solving a single goal through composition if needed. Primitives don't need memoization, objects are optionally memoized, but functions exported from custom hooks MUST always be memoized.
 
-All user interface components MUST use PatternFly v6 as the primary component library. Material UI MUST only be used for Kubeflow compatibility mode. Custom CSS MUST be avoided except as a last resort using CSS variables only. This ensures consistent user experience across the Red Hat OpenShift AI dashboard and maintains design system compliance.
+**Rationale**: With thousands of users depending on this dashboard, type safety prevents runtime errors and ensures maintainability in this brownfield TypeScript project.
 
-**Rationale**: PatternFly provides enterprise-grade accessibility, consistency with OpenShift console, and reduces maintenance overhead compared to custom styling solutions.
+### II. PatternFly-Only UI Components
+All user interface components MUST use PatternFly v6 library exclusively. Custom CSS styling is PROHIBITED except as an absolute last resort using CSS variables. Material UI is only permitted in Kubeflow mode. No custom styling solutions or component libraries outside PatternFly are allowed for RHOAI/ODH mode.
 
-### II. TypeScript Strict Mode (NON-NEGOTIABLE)
+**Rationale**: Consistency across the Red Hat OpenShift console ecosystem requires standardized UI components. PatternFly ensures accessibility, brand compliance, and reduces maintenance overhead.
 
-All code MUST be written in TypeScript with strict mode enabled. Type assertions MUST NOT be used under any circumstances. All functions, components, and data structures MUST have explicit type definitions. Generic types MUST be properly constrained and meaningful.
+### III. Comprehensive Testing Coverage
+Complete test coverage is MANDATORY for all utility functions, custom hooks, API utilities, data transformations, and business logic. Unit tests MUST use Jest with React Testing Library. Integration tests MUST be implemented for new library contracts, contract changes, inter-service communication, and shared schemas. Follow TDD: tests written → user approved → tests fail → implement. Use `data-testid` attributes for component testing, accessibility selectors as fallback. NEVER use DOM structure or CSS selectors.
 
-**Rationale**: TypeScript strict mode prevents runtime errors, improves code maintainability, and provides better developer experience. Type assertions undermine type safety and create hidden runtime risks in a mission-critical dashboard serving thousands of users.
+**Rationale**: With thousands of production users, comprehensive testing prevents regressions and ensures system reliability. The brownfield nature requires defensive testing practices.
 
-### III. Complete Testing Coverage (NON-NEGOTIABLE)
+### IV. Performance-First Architecture
+Performance optimization is NON-NEGOTIABLE. All code changes MUST consider performance impact. Implement proper memoization strategies: memoize functions in custom hooks, optionally memoize objects, skip primitive memoization. Monitor and prevent excessive re-renders. Lazy loading MUST be implemented for non-critical components. Bundle size increases require justification.
 
-Every utility function and custom hook MUST have comprehensive unit tests using Jest. React components MUST have Cypress component or integration tests. E2E tests MUST cover critical user workflows. Test files MUST follow the `.spec.ts` naming convention and be located in adjacent `__tests__` directories.
+**Rationale**: Dashboard serves thousands of concurrent users on Red Hat OpenShift. Performance directly impacts user experience and system scalability.
 
-**Rationale**: Complete test coverage ensures stability and performance for a brownfield application used by thousands of users in production environments. Testing prevents regressions and enables confident refactoring.
+### V. Code Quality Standards
+Code MUST follow existing patterns and conventions found in the codebase. Prefer editing existing files over creating new ones. Check package.json for available libraries before introducing new dependencies. Follow established naming conventions, framework choices, and architectural patterns. Security best practices are MANDATORY - never expose or commit secrets/keys.
 
-### IV. Custom Hook Best Practices
+**Rationale**: Consistency in a large monorepo with multiple teams requires strict adherence to established patterns. Security is paramount in enterprise environments.
 
-Custom React hooks MUST follow strict patterns: 1) Clear input/output type definitions with strict typing, 2) Single responsibility principle - solve one goal that may compose other hooks, 3) Primitive values need not be memoized, objects MAY be memoized, functions sent out of hooks MUST always be memoized.
+## Development Standards
 
-**Rationale**: Proper hook patterns prevent unnecessary re-renders, improve performance, and create predictable behavior patterns that other developers can rely on.
+All development MUST follow the monorepo structure with proper package boundaries. React 18 patterns are required. Module Federation with Webpack MUST be respected for package architecture. Turbo task runner MUST be used for build orchestration. Node.js >= 22.0.0 and npm >= 10.0.0 are required. Go >= 1.24 is required for packages with Backend-For-Frontend (BFF) services.
 
-### V. Performance-First Architecture
+## Quality Assurance
 
-All code MUST prioritize performance and stability due to the brownfield nature and thousands of active users. Bundle splitting MUST be used for federated modules. Components MUST implement proper memoization patterns. Network requests MUST be optimized with proper caching and error handling.
-
-**Rationale**: Performance directly impacts user productivity in data science workflows. Slow interfaces reduce efficiency and create negative user experiences in enterprise environments.
-
-## Module Federation Standards
-
-All federated modules MUST implement proper error boundaries and fallback handling. Shared dependencies MUST be managed efficiently to prevent duplication. Module-to-module communication MUST use standardized event patterns. Route registration MUST be dynamic and properly scoped.
-
-**Integration Requirements**: Modules MUST export standardized interfaces, implement proper cleanup mechanisms, and maintain compatibility with the host application's React 18 and PatternFly v6 dependencies.
-
-## Code Quality Standards
-
-ESLint configuration MUST be strictly enforced with zero warnings allowed. Pre-commit hooks MUST validate formatting, linting, and TypeScript compilation. Code reviews MUST verify PatternFly usage, test coverage, and performance considerations.
-
-**Documentation Requirements**: All complex components MUST have inline documentation. API interfaces MUST be fully documented with TypeScript. Before completing tasks, agents MUST read `frontend/docs/generatedOverview.md` for context and `AGENTS.md` for specialized rules.
+Agents MUST read `frontend/docs/generate-docs.md` for frontend directory overview and `AGENTS.md` in the root for specialized agent rules before completing tasks. All spec-kit artifacts MUST be placed in `frontend/.specify` directory. Lint and type-check commands MUST pass before any code submission. E2E tests using Cypress MUST cover critical user workflows.
 
 ## Governance
 
-This constitution supersedes all other development practices and conventions. All pull requests MUST demonstrate compliance with these principles. Performance optimizations MUST be justified with measurements. Breaking changes MUST include migration plans and backward compatibility strategies.
+This constitution supersedes all other development practices. All code reviews MUST verify compliance with these principles. Complexity that violates these principles MUST be justified and approved. Changes to core principles require documentation, approval, and migration plan. Non-compliance issues MUST be addressed immediately.
 
-**Compliance Review**: Code reviews MUST verify adherence to PatternFly standards, TypeScript strict mode, testing requirements, and performance considerations. Any deviation MUST be explicitly justified and approved by architecture review.
-
-**Spec Artifacts Location**: All spec-kit artifacts MUST be placed in `/frontend/.specify` as this constitution was invoked from the frontend directory context.
-
-**Agent Context**: Agents MUST consult `frontend/docs/generatedOverview.md` for comprehensive frontend overview and `AGENTS.md` for specialized agent rules when completing tasks.
-
-**Version**: 1.0.0 | **Ratified**: 2025-02-17 | **Last Amended**: 2025-02-17
+**Version**: 1.0.0 | **Ratified**: 2026-02-17 | **Last Amended**: 2026-02-17
