@@ -60,7 +60,7 @@ This constitution supersedes all other development practices and conventions. Al
 
 **Compliance Review**: Code reviews MUST verify adherence to PatternFly standards, TypeScript strict mode, testing requirements, and performance considerations. Any deviation MUST be explicitly justified and approved by architecture review.
 
-**Spec Artifacts Location**: All spec-kit artifacts MUST be placed in `/frontend/.specify/specs` as this constitution was invoked from the frontend directory context.
+**Spec Artifacts Location**: All spec-kit artifacts MUST be placed in `/frontend/.specify` as this constitution was invoked from the frontend directory context.
 
 **Agent Context**: Agents MUST consult `frontend/docs/generatedOverview.md` for comprehensive frontend overview and `AGENTS.md` for specialized agent rules when completing tasks.
 
