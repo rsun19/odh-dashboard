@@ -88,12 +88,15 @@ Before performing certain tasks, read and follow the corresponding specialized r
 
 **Important**: Always read the relevant rule file before starting the task to ensure you follow the project's conventions and patterns.
 
-### Package-Specific Documentation Rules
+### Package-Specific Context
 
-When working on documentation for specific packages, check for package-specific `generate-docs.md` files in these locations:
-- `frontend/docs/generate-docs.md` - for frontend documentation tasks
-- `backend/docs/generate-docs.md` - for backend documentation tasks  
-- `packages/*/docs/generate-docs.md` - for individual package documentation tasks
+**Important**: When working on documentation for specific packages, the frontend, or backend, check for package-specific `generatedOverview.md` AND `constitution.md` files in these locations:
+- `frontend/docs/generatedOverview.md` - for context in the frontend
+- `backend/docs/generatedOverview.md` - for context in the backend  
+- `packages/*/docs/generatedOverview.md` - for context in the individual packages.
+- `frontend/docs/constitution.md` - for foundational principles in the frontend
+- `backend/docs/constitution.md` - for foundational principles in the backend  
+- `packages/*/docs/constitution.md` - for foundational principles in the individual packages.
 
 **Available packages**: app-config, autorag, contract-tests, cypress, eslint-config, eslint-plugin, feature-store, gen-ai, jest-config, kserve, llmd-serving, lm-eval, maas, mlflow-poc, model-registry, model-serving-backport, model-serving, model-training, notebooks, observability, plugin-core, plugin-template, tsconfig
 
