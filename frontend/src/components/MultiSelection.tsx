@@ -53,6 +53,8 @@ type MultiSelectionProps = {
   toggleTestId?: string;
   /** Test ID for the dropdown list */
   listTestId?: string;
+  /** Test ID for the clear selections button */
+  clearSelectionsTestId?: string;
   /** Flag to indicate if the typeahead select allows new items */
   isCreatable?: boolean;
   /** Flag to indicate if create option should be at top of typeahead */
@@ -80,6 +82,7 @@ export const MultiSelection: React.FC<MultiSelectionProps> = ({
   inputId,
   toggleTestId,
   listTestId,
+  clearSelectionsTestId,
   selectionRequired,
   noSelectedOptionsMessage = 'One or more options must be selected',
   isCreatable = false,
@@ -93,6 +96,12 @@ export const MultiSelection: React.FC<MultiSelectionProps> = ({
   const [focusedItemIndex, setFocusedItemIndex] = React.useState<number | null>(null);
   const [activeItem, setActiveItem] = React.useState<string | null>(null);
   const textInputRef = React.useRef<HTMLInputElement>();
+  const listboxId = React.useMemo(() => {
+    const base = String(toggleId || inputId || id || 'select-multi-typeahead');
+    // IDs must not contain spaces.
+    return `${base.replaceAll(' ', '-')}-listbox`;
+  }, [id, inputId, toggleId]);
+  const selectionErrorId = React.useMemo(() => `${listboxId}-selection-error`, [listboxId]);
 
   const selectGroups = React.useMemo(() => {
     let counter = 0;
@@ -258,13 +267,31 @@ export const MultiSelection: React.FC<MultiSelectionProps> = ({
   };
 
   const noSelectedItems = allOptions.filter((option) => option.selected).length === 0;
+  const showSelectionError = Boolean(selectionRequired && noSelectedItems);
+  const hasCreateOptionStandaloneList = Boolean(
+    createOption && isCreateOptionOnTop && groupOptions.length > 0,
+  );
+  const hasNoResultsList = Boolean(!createOption && visibleOptions.length === 0 && inputValue);
+  type ListboxIdOwner = 'standaloneCreate' | 'noResults' | 'firstGroup' | 'selectList';
+  const listboxIdOwner: ListboxIdOwner = React.useMemo(() => {
+    if (hasCreateOptionStandaloneList) {
+      return 'standaloneCreate';
+    }
+    if (hasNoResultsList) {
+      return 'noResults';
+    }
+    if (selectGroups.length > 0) {
+      return 'firstGroup';
+    }
+    return 'selectList';
+  }, [hasCreateOptionStandaloneList, hasNoResultsList, selectGroups.length]);
 
   const toggle = (toggleRef: React.Ref<MenuToggleElement>) => (
     <MenuToggle
       id={toggleId}
       data-testid={toggleTestId}
       variant="typeahead"
-      status={selectionRequired && noSelectedItems ? 'danger' : undefined}
+      status={showSelectionError ? 'danger' : undefined}
       aria-label={ariaLabel}
       onClick={onToggleClick}
       innerRef={toggleRef}
@@ -284,7 +311,8 @@ export const MultiSelection: React.FC<MultiSelectionProps> = ({
           {...(activeItem && { 'aria-activedescendant': activeItem })}
           role="combobox"
           isExpanded={isOpen}
-          aria-controls="select-multi-typeahead-listbox"
+          aria-controls={listboxId}
+          {...(showSelectionError && { 'aria-describedby': selectionErrorId })}
           placeholder={placeholder}
         >
           <LabelGroup aria-label="Current selections">
@@ -313,6 +341,7 @@ export const MultiSelection: React.FC<MultiSelectionProps> = ({
                 textInputRef.current?.focus();
               }}
               aria-label="Clear input value"
+              data-testid={clearSelectionsTestId}
             />
           )}
         </TextInputGroupUtilities>
@@ -336,21 +365,30 @@ export const MultiSelection: React.FC<MultiSelectionProps> = ({
         popperProps={popperProps}
       >
         {createOption && isCreateOptionOnTop && groupOptions.length > 0 ? (
-          <SelectList isAriaMultiselectable>
+          <SelectList
+            isAriaMultiselectable
+            {...(listboxIdOwner === 'standaloneCreate' && { id: listboxId })}
+          >
             <SelectOption value={createOption.id} isFocused={focusedItemIndex === 0}>
               {createOption.name}
             </SelectOption>
           </SelectList>
         ) : null}
         {!createOption && visibleOptions.length === 0 && inputValue ? (
-          <SelectList isAriaMultiselectable>
+          <SelectList
+            isAriaMultiselectable
+            {...(listboxIdOwner === 'noResults' && { id: listboxId })}
+          >
             <SelectOption isDisabled>No results found</SelectOption>
           </SelectList>
         ) : null}
         {selectGroups.map((g, index) => (
           <React.Fragment key={g.id}>
             <SelectGroup label={g.name} key={g.id}>
-              <SelectList isAriaMultiselectable>
+              <SelectList
+                isAriaMultiselectable
+                {...(listboxIdOwner === 'firstGroup' && index === 0 && { id: listboxId })}
+              >
                 {g.values.map((option) => (
                   <SelectOption
                     key={option.name}
@@ -372,7 +410,11 @@ export const MultiSelection: React.FC<MultiSelectionProps> = ({
         ))}
         {selectOptions.length ||
         (createOption && (!isCreateOptionOnTop || groupOptions.length === 0)) ? (
-          <SelectList isAriaMultiselectable data-testid={listTestId}>
+          <SelectList
+            isAriaMultiselectable
+            data-testid={listTestId}
+            {...(listboxIdOwner === 'selectList' && { id: listboxId })}
+          >
             {createOption && isCreateOptionOnTop && groupOptions.length === 0 ? (
               <SelectOption value={createOption.id}>{createOption.name}</SelectOption>
             ) : null}
@@ -392,7 +434,7 @@ export const MultiSelection: React.FC<MultiSelectionProps> = ({
             ))}
             {createOption && !isCreateOptionOnTop ? (
               <SelectOption
-                data-testid={`select-multi-typeahead-${Option.name.replace(' ', '-')}`}
+                data-testid={`select-multi-typeahead-${createOption.name.replace(' ', '-')}`}
                 value={createOption.id}
                 isFocused={focusedItemIndex === visibleOptions.length - 1}
               >
@@ -402,9 +444,13 @@ export const MultiSelection: React.FC<MultiSelectionProps> = ({
           </SelectList>
         ) : null}
       </Select>
-      {noSelectedItems && selectionRequired && (
+      {showSelectionError && (
         <HelperText isLiveRegion>
-          <HelperTextItem variant="error" data-testid="group-selection-error-text">
+          <HelperTextItem
+            id={selectionErrorId}
+            variant="error"
+            data-testid="group-selection-error-text"
+          >
             {noSelectedOptionsMessage}
           </HelperTextItem>
         </HelperText>

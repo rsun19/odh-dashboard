@@ -1,0 +1,30 @@
+# odh-dashboard Development Guidelines
+
+Auto-generated from all feature plans. Last updated: 2026-02-17
+
+## Active Technologies
+
+- TypeScript (strict) + React 18 + PatternFly v6 (`@patternfly/react-core`) + PatternFly React Charts (`@patternfly/react-charts` ECharts `Charts`) (002-parallel-coords-plot)
+
+## Project Structure
+
+```text
+backend/
+frontend/
+tests/
+```
+
+## Commands
+
+npm test && npm run lint
+
+## Code Style
+
+TypeScript (strict) + React 18: Follow standard conventions
+
+## Recent Changes
+
+- 002-parallel-coords-plot: Added TypeScript (strict) + React 18 + PatternFly v6 (`@patternfly/react-core`) + PatternFly React Charts (`@patternfly/react-charts` ECharts `Charts`)
+
+<!-- MANUAL ADDITIONS START -->
+<!-- MANUAL ADDITIONS END -->

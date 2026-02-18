@@ -25,6 +25,7 @@ import {
   compareRunsListTable,
   compareRunParamsTable,
   compareRunsMetricsContent,
+  compareRunsVisualizationsContent,
 } from '../../../../pages/pipelines/compareRuns';
 import { initMlmdIntercepts } from '../mlmdUtils';
 
@@ -48,6 +49,7 @@ const mockRun = buildMockRunKF({
   experiment_id: mockExperiment.experiment_id,
   runtime_config: {
     parameters: {
+      model_name: 'registered-model-a',
       paramOne: true,
       paramTwo: false,
     },
@@ -64,6 +66,7 @@ const mockRun2 = buildMockRunKF({
   experiment_id: mockExperiment.experiment_id,
   runtime_config: {
     parameters: {
+      model_name: 'registered-model-b',
       paramOne: false,
       paramTwo: false,
       paramThree: 'Threeseretops',
@@ -216,6 +219,53 @@ describe('Compare runs', () => {
       compareRunParamsTable.findParamName('paramOne').should('exist');
       compareRunParamsTable.findParamName('paramTwo').should('not.exist');
       compareRunParamsTable.findParamName('paramThree').should('exist');
+    });
+  });
+
+  describe('Visualizations', () => {
+    beforeEach(() => {
+      compareRunsGlobal.visit(projectName, mockExperiment.experiment_id, [
+        mockRun.run_id,
+        mockRun2.run_id,
+      ]);
+    });
+
+    it('renders the visualizations section and parallel coordinates plot container', () => {
+      compareRunsVisualizationsContent.find().should('exist');
+      compareRunsVisualizationsContent.findParallelCoordinatesTab().should('exist');
+      compareRunsVisualizationsContent.findParallelCoordinatesPlot().should('exist');
+    });
+
+    it('shows empty state when the Runs list has fewer than 2 selections', () => {
+      compareRunsListTable.findSelectAllCheckbox().click(); // Uncheck all
+      compareRunsVisualizationsContent.findEmptyState().should('exist');
+    });
+
+    it('updates the plot when parameter and metric filters change', () => {
+      compareRunsVisualizationsContent.findAxisFilterToggle().click();
+      cy.findByRole('button', { name: 'Clear input value' }).click();
+      compareRunsVisualizationsContent.findAxisLabels().should('have.text', '');
+
+      compareRunsVisualizationsContent.findAxisOption('paramOne').click();
+      compareRunsVisualizationsContent.findAxisLabels().should('contain.text', 'paramOne');
+
+      // Scalar metric keys are sourced from mocked MLMD intercepts
+      compareRunsVisualizationsContent.findAxisOption('accuracy').click();
+      compareRunsVisualizationsContent.findAxisLabels().should('contain.text', 'accuracy');
+
+      // Toggle selection off
+      compareRunsVisualizationsContent.findAxisOption('paramOne').click();
+      compareRunsVisualizationsContent.findAxisLabels().should('not.contain.text', 'paramOne');
+    });
+
+    it('shows a warning when some selected runs are missing axis values', () => {
+      compareRunsGlobal.visit(projectName, mockExperiment.experiment_id, [
+        mockRun.run_id,
+        mockRun2.run_id,
+        mockRun3.run_id,
+      ]);
+
+      compareRunsVisualizationsContent.findMissingValuesWarning().should('exist');
     });
   });
 

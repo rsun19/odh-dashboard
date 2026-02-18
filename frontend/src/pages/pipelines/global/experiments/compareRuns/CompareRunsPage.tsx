@@ -12,6 +12,7 @@ import { experimentRunsRoute } from '#~/routes/pipelines/experiments';
 import PipelineContextBreadcrumb from '#~/concepts/pipelines/content/PipelineContextBreadcrumb';
 import { CompareRunMetricsSection } from './CompareRunsMetricsSection';
 import { CompareRunParamsSection } from './CompareRunParamsSection';
+import { CompareRunsVisualizationsSection } from './CompareRunsVisualizationsSection';
 
 const CompareRunsPage: React.FC<PathProps> = ({ breadcrumbPath }) => {
   const { runs, loaded } = useCompareRuns();
@@ -50,6 +51,10 @@ const CompareRunsPage: React.FC<PathProps> = ({ breadcrumbPath }) => {
       <Stack hasGutter>
         <StackItem>
           <CompareRunsRunList />
+        </StackItem>
+
+        <StackItem>
+          <CompareRunsVisualizationsSection />
         </StackItem>
 
         <StackItem>

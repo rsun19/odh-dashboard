@@ -109,6 +109,40 @@ class CompareMetricsContent {
   }
 }
 
+class CompareRunsVisualizationsContent {
+  find() {
+    return cy.findByTestId('compare-runs-visualizations-content');
+  }
+
+  findParallelCoordinatesTab() {
+    return this.find().findByTestId('compare-runs-parallel-coordinates-tab');
+  }
+
+  findParallelCoordinatesPlot() {
+    return this.find().findByTestId('compare-runs-parallel-coordinates-plot');
+  }
+
+  findEmptyState() {
+    return this.find().findByTestId('compare-runs-visualizations-empty-state');
+  }
+
+  findAxisFilterToggle() {
+    return this.find().findByTestId('compare-runs-parallel-coordinates-axis-filter');
+  }
+
+  findAxisLabels() {
+    return this.find().findByTestId('compare-runs-parallel-coordinates-axis-labels');
+  }
+
+  findAxisOption(name: string) {
+    return cy.findByTestId(`select-multi-typeahead-${name.replace(' ', '-')}`);
+  }
+
+  findMissingValuesWarning() {
+    return this.find().findByTestId('compare-runs-parallel-coordinates-missing-values-warning');
+  }
+}
+
 class RocCurveFilterTableRow extends TableRow {
   findRunName() {
     return this.find().find(`[data-label="Run name"]`);
@@ -280,3 +314,4 @@ export const compareRunsGlobal = new CompareRunsGlobal();
 export const compareRunsListTable = new CompareRunsListTable();
 export const compareRunParamsTable = new CompareRunParamsTable();
 export const compareRunsMetricsContent = new CompareMetricsContent();
+export const compareRunsVisualizationsContent = new CompareRunsVisualizationsContent();

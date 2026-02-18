@@ -37,7 +37,8 @@
   },
   "dependencies": {
     "@odh-dashboard/app-config": "*",
-    "@odh-dashboard/plugin-core": "*"
+    "@odh-dashboard/plugin-core": "*",
+    "echarts": "^6.0.0"
   },
   "devDependencies": {
     "@odh-dashboard/eslint-config": "*"
