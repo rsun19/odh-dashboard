@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Label, LabelProps, Popover } from '@patternfly/react-core';
+import { Label, LabelProps } from '@patternfly/react-core';
 import {
   CheckCircleIcon,
   ExclamationCircleIcon,
@@ -28,7 +28,6 @@ type StatusLabelSettings = {
   color?: LabelProps['color'];
   status?: LabelProps['status'];
   icon: React.ReactNode;
-  description?: string;
 };
 
 const NotebookStatusLabel: React.FC<NotebookStateStatusProps> = ({
@@ -48,8 +47,6 @@ const NotebookStatusLabel: React.FC<NotebookStateStatusProps> = ({
         label: 'Failed',
         status: 'danger',
         icon: <ExclamationCircleIcon />,
-        description:
-          'The system was unable to create or start your workbench. This could be due to issues like insufficient cluster resources, problems pulling the container image, or configuration errors. You may need to check the event logs for more details.',
       };
     }
 
@@ -58,8 +55,6 @@ const NotebookStatusLabel: React.FC<NotebookStateStatusProps> = ({
         label: 'Stopping',
         color: 'grey',
         icon: <InProgressIcon className="odh-u-spin" />,
-        description:
-          'The system is in the process of shutting down your workbench and releasing its compute resources.',
       };
     }
     if (kueueStatus?.status && KUEUE_STATUSES_OVERRIDE_WORKBENCH.includes(kueueStatus.status)) {
@@ -76,8 +71,6 @@ const NotebookStatusLabel: React.FC<NotebookStateStatusProps> = ({
         label: 'Starting',
         color: 'blue',
         icon: <InProgressIcon className="odh-u-spin" />,
-        description:
-          'The system is actively provisioning the resources for your workbench, such as pulling the container image and allocating storage and compute (like CPUs/GPUs).',
       };
     }
     if (isRunning) {
@@ -85,16 +78,12 @@ const NotebookStatusLabel: React.FC<NotebookStateStatusProps> = ({
         label: 'Ready',
         status: 'success',
         icon: <CheckCircleIcon />,
-        description:
-          'The workbench is fully provisioned, running, and available for you to connect to and use.',
       };
     }
     return {
       label: 'Stopped',
       color: 'grey',
       icon: <OffIcon />,
-      description:
-        'The workbench is not running and is not consuming compute resources (like CPUs/GPUs). Your data in any attached persistent storage is safe and will be re-attached when you start the workbench again.',
     };
   }, [kueueStatus, isError, isRunning, isStarting, isStopping]);
 
@@ -111,14 +100,6 @@ const NotebookStatusLabel: React.FC<NotebookStateStatusProps> = ({
       {labelSettings.label}
     </Label>
   );
-
-  if (labelSettings.description) {
-    return (
-      <Popover headerContent={labelSettings.label} bodyContent={labelSettings.description}>
-        {label}
-      </Popover>
-    );
-  }
 
   return label;
 };
