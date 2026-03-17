@@ -6,8 +6,7 @@ import {
   InProgressIcon,
   CheckCircleIcon,
   ExclamationCircleIcon,
-  UploadIcon,
-  BanIcon,
+  CheckIcon,
 } from '@patternfly/react-icons';
 import { SVGIconProps } from '@patternfly/react-icons/dist/esm/createIcon';
 import {
@@ -42,7 +41,7 @@ export enum WorkloadStatusType {
   Admitted = 'Admitted',
   Running = 'Running',
   Evicted = 'Evicted',
-  Succeeded = 'Succeeded',
+  Complete = 'Complete',
   Failed = 'Failed',
 }
 
@@ -55,49 +54,65 @@ export type TopWorkloadUsageType = {
 export type WorkloadStatusInfo = {
   status: WorkloadStatusType;
   message: string;
-  color: LabelProps['color'];
+  description: string;
+  color?: LabelProps['color'];
+  labelStatus?: LabelProps['status'];
   chartColor: string;
   icon: React.ComponentClass<SVGIconProps>;
 };
 
 export const WorkloadStatusColorAndIcon: Record<
   WorkloadStatusType,
-  Pick<WorkloadStatusInfo, 'color' | 'chartColor' | 'icon'>
+  Pick<WorkloadStatusInfo, 'color' | 'labelStatus' | 'chartColor' | 'icon' | 'description'>
 > = {
   Pending: {
-    color: 'teal',
+    color: 'purple',
     chartColor: chartColorCyan.value,
     icon: PendingIcon,
+    description:
+      'It has not yet been allocated the necessary resources (like GPUs or CPU) to start.',
   },
   Inadmissible: {
-    color: 'orangered',
+    labelStatus: 'warning',
     chartColor: chartColorGold.value,
     icon: ExclamationTriangleIcon,
+    description:
+      'The workload cannot be scheduled as requested because it violates cluster rules or references a missing or misconfigured resource (such as a LocalQueue, ClusterQueue, or ResourceFlavor). The workload will remain in this state until its configuration is updated or the referenced resources are fixed.',
   },
   Admitted: {
-    color: 'purple',
+    color: 'grey',
     chartColor: chartColorPurple.value,
-    icon: UploadIcon,
+    icon: CheckIcon,
+    description:
+      'The workload has been approved to run. The scheduler has reserved the required resources for it, and it is in the process of starting up (e.g., creating pods, pulling container images).',
   },
   Running: {
     color: 'blue',
     chartColor: chartColorBlue.value,
     icon: InProgressIcon,
+    description:
+      'The workload is actively executing on the cluster. All its required pods are operational and performing their tasks.',
   },
   Evicted: {
-    color: 'grey',
+    labelStatus: 'warning',
     chartColor: chartColorBlack.value,
-    icon: BanIcon,
+    icon: ExclamationTriangleIcon,
+    description:
+      'The workload was running (or admitted) but has been stopped and removed from its nodes. This is typically done to make room for a higher-priority workload, a process known as preemption. The evicted workload is usually placed back in the queue to await resources again.',
   },
-  Succeeded: {
-    color: 'green',
+  Complete: {
+    labelStatus: 'success',
     chartColor: chartColorGreen.value,
     icon: CheckCircleIcon,
+    description:
+      'The workload has finished its execution successfully without any errors. This is a final state.',
   },
   Failed: {
-    color: 'red',
+    labelStatus: 'danger',
     chartColor: chartColorRed.value,
     icon: ExclamationCircleIcon,
+    description:
+      'The workload has terminated due to an error. This could be a crash in the code, a failure to pull a container image, or another issue that prevented it from finishing successfully. This is also a final state.',
   },
 };
 
@@ -106,7 +121,7 @@ export const getStatusInfo = (wl: WorkloadKind): WorkloadStatusInfo => {
   // Order matters here: The first matching condition in this order will be used for the current status.
   const statusesInEvalOrder: WorkloadStatusType[] = [
     WorkloadStatusType.Failed,
-    WorkloadStatusType.Succeeded,
+    WorkloadStatusType.Complete,
     WorkloadStatusType.Evicted,
     WorkloadStatusType.Inadmissible,
     WorkloadStatusType.Pending,
@@ -120,7 +135,7 @@ export const getStatusInfo = (wl: WorkloadKind): WorkloadStatusInfo => {
         type === 'Finished' &&
         /error|failed|rejected/.test(`${message} ${reason}`.toLowerCase()),
     ),
-    Succeeded: conditions?.find(
+    Complete: conditions?.find(
       ({ type, status, message, reason }) =>
         status === 'True' &&
         type === 'Finished' &&
@@ -154,7 +169,7 @@ export const getStatusCounts = (workloads: WorkloadKind[]): WorkloadStatusCounts
     Admitted: 0,
     Running: 0,
     Evicted: 0,
-    Succeeded: 0,
+    Complete: 0,
     Failed: 0,
   };
   workloads.forEach((wl) => {
@@ -271,7 +286,7 @@ export const getWorkloadStatusMessage = (statusInfo: WorkloadStatusInfo): string
   const DEFAULT_MESSAGE = 'No message';
   const SUCCESS_MESSAGE = 'Finished';
   const isSuccessWithNoMessage =
-    statusInfo.status === WorkloadStatusType.Succeeded && statusInfo.message === DEFAULT_MESSAGE;
+    statusInfo.status === WorkloadStatusType.Complete && statusInfo.message === DEFAULT_MESSAGE;
 
   return isSuccessWithNoMessage ? SUCCESS_MESSAGE : statusInfo.message;
 };

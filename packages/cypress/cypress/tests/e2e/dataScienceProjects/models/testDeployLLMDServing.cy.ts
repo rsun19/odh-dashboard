@@ -141,7 +141,7 @@ describe('[Automation Bug: RHOAIENG-52476] A user can deploy an LLMD model', () 
       modelServingGlobal.visit(projectName);
 
       const llmdRow = modelServingGlobal.getDeploymentRow(modelName);
-      llmdRow.findStatusLabel(ModelStateLabel.STARTED).should('exist');
+      llmdRow.findStatusLabel(ModelStateLabel.READY).should('exist');
       // Expand row to verify deployment details
       llmdRow.findServingRuntime().should('have.text', servingRuntime);
     },

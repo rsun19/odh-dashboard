@@ -17,9 +17,9 @@ enum ModelRegistryStatus {
 }
 
 enum ModelRegistryStatusLabel {
-  Progressing = 'Progressing',
-  Available = 'Available',
-  Degrading = 'Degrading',
+  Progressing = 'Starting',
+  Available = 'Ready',
+  Degrading = 'Stopping',
   Unavailable = 'Unavailable',
 }
 
@@ -41,6 +41,7 @@ export const ModelRegistryTableRowStatus: React.FC<ModelRegistryTableRowStatusPr
     }, {}) ?? {};
   let statusLabel: string = ModelRegistryStatusLabel.Progressing;
   let icon = <InProgressIcon />;
+  let color: React.ComponentProps<typeof Label>['color'] = 'blue';
   let status: React.ComponentProps<typeof Label>['status'];
   let popoverMessages: string[] = [];
   let popoverTitle = '';
@@ -69,25 +70,27 @@ export const ModelRegistryTableRowStatus: React.FC<ModelRegistryTableRowStatusPr
     ) {
       statusLabel = ModelRegistryStatusLabel.Unavailable;
       icon = <ExclamationTriangleIcon />;
+      color = undefined;
       status = 'warning';
     }
     // Degrading
     else if (degradedCondition?.status === ConditionStatus.True) {
       statusLabel = ModelRegistryStatusLabel.Degrading;
       icon = <InProgressIcon className="kubeflow-u-spin" />;
+      color = 'grey';
       popoverTitle = 'Service is degrading';
     }
     // Available
     else if (availableCondition?.status === ConditionStatus.True) {
       statusLabel = ModelRegistryStatusLabel.Available;
       icon = <CheckCircleIcon />;
+      color = undefined;
       status = 'success';
     }
     // Progressing
     else if (progressCondition?.status === ConditionStatus.True) {
       statusLabel = ModelRegistryStatusLabel.Progressing;
       icon = <InProgressIcon className="kubeflow-u-spin" />;
-      status = 'info';
     }
   }
   // Handle popover logic for Unavailable status
@@ -116,47 +119,62 @@ export const ModelRegistryTableRowStatus: React.FC<ModelRegistryTableRowStatusPr
     }
   }
 
-  const isClickable = popoverTitle && popoverMessages.length;
+  const statusDescriptions: Record<string, string> = {
+    [ModelRegistryStatusLabel.Available]:
+      'The model registry operator is running, its components (like the operator pod) are healthy, and it is successfully connected to its database. It is fully operational and available for use.',
+    [ModelRegistryStatusLabel.Progressing]:
+      'The system is in the process of provisioning the model registry. This includes creating the necessary pods (like the model-registry-operator) and establishing the connection to its database.',
+    [ModelRegistryStatusLabel.Degrading]:
+      "The system is in the process of shutting down and terminating the model registry's components.",
+    [ModelRegistryStatusLabel.Unavailable]:
+      'The RHOAI dashboard cannot communicate with the model registry\'s backend components. This could be due to a network issue, a component being in an unknown state, or a problem with the database connection. Can also be a transient state preceding "Ready", e.g. when pods are still starting and the underlying condition is ContainersNotReady.',
+  };
+
+  const hasConditionPopover = popoverTitle && popoverMessages.length;
 
   const label = (
     <Label
-      {...(isClickable
-        ? {
-            onClick: () => {
-              /* intentional no-op - Click event is handled by the Popover parent,
-              this prop enables clickable styles in the PatternFly Label */
-            },
-          }
-        : {})}
+      onClick={() => {
+        /* intentional no-op - Click event is handled by the Popover parent,
+        this prop enables clickable styles in the PatternFly Label */
+      }}
       data-testid="model-registry-label"
       icon={icon}
+      color={color}
       status={status}
       isCompact
+      style={{ cursor: 'pointer' }}
     >
       {statusLabel}
     </Label>
   );
 
-  return popoverTitle && popoverMessages.length ? (
-    <Popover
-      headerContent={popoverTitle}
-      {...(statusLabel === ModelRegistryStatusLabel.Degrading
-        ? {
-            alertSeverityVariant: 'warning',
-            headerIcon: <ExclamationTriangleIcon />,
-          }
-        : { alertSeverityVariant: 'danger', headerIcon: <ExclamationCircleIcon /> })}
-      bodyContent={
-        <Stack hasGutter>
-          {popoverMessages.map((message, index) => (
-            <StackItem key={`message-${index}`}>{message}</StackItem>
-          ))}
-        </Stack>
-      }
-    >
+  if (hasConditionPopover) {
+    return (
+      <Popover
+        headerContent={popoverTitle}
+        {...(statusLabel === ModelRegistryStatusLabel.Degrading
+          ? {
+              alertSeverityVariant: 'warning',
+              headerIcon: <ExclamationTriangleIcon />,
+            }
+          : { alertSeverityVariant: 'danger', headerIcon: <ExclamationCircleIcon /> })}
+        bodyContent={
+          <Stack hasGutter>
+            {popoverMessages.map((message, index) => (
+              <StackItem key={`message-${index}`}>{message}</StackItem>
+            ))}
+          </Stack>
+        }
+      >
+        {label}
+      </Popover>
+    );
+  }
+
+  return (
+    <Popover headerContent={statusLabel} bodyContent={statusDescriptions[statusLabel]}>
       {label}
     </Popover>
-  ) : (
-    label
   );
 };

@@ -137,7 +137,6 @@ export const DeploymentRow: React.FC<{
           <ModelStatusIcon
             state={deployment.status?.state ?? ModelDeploymentState.UNKNOWN}
             bodyContent={deployment.status?.message}
-            defaultHeaderContent="Inference Service Status"
             stoppedStates={deployment.status?.stoppedStates}
           />
         </Td>
