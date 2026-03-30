@@ -71,7 +71,7 @@ npm run type-check
 
 ## Documentation
 
-**[docs/BOOKMARKS.md](docs/BOOKMARKS.md)** indexes key documentation for frontend areas, the backend, and packages. Review relevant docs for the area you are working on before starting a task.
+**[BOOKMARKS.md](BOOKMARKS.md)** indexes key documentation for frontend areas, the backend, and packages. Review relevant docs for the area you are working on before starting a task.
 
 ## Package-Specific Guidelines
 
@@ -109,6 +109,9 @@ Skills provide multi-step workflows. They live in `.claude/skills/`. Read the re
 | Skill                              | Directory                              | Use when                                                                       |
 | ---------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------ |
 | **Dev Workflow**                   | `skills/dev-workflow/`                 | Implementing a feature, fix, or refactor — runs lint, type-check, tests, and optional browser verification |
+| **Docs Create**                  | `skills/docs-create/`                  | Creating a new documentation file from a description                           |
+| **Docs Create Package**          | `skills/docs-create-package/`          | Scaffolding a package doc and registering it in BOOKMARKS.md                   |
+| **Docs Update**                  | `skills/docs-update/`                  | Updating existing docs after code changes                                      |
 | **Model Registry Sync Status**    | `skills/model-registry-sync-status/`   | Checking whether the local model-registry upstream copy is up to date          |
 | **Model Registry Upstream Sync**  | `skills/model-registry-upstream-sync/` | Syncing upstream changes from kubeflow/model-registry and opening a PR         |
 
