@@ -212,7 +212,7 @@ const RegisterCatalogModelForm: React.FC<RegisterCatalogModelFormProps> = ({
         style={removeChildrenTopPadding ? { paddingTop: 0 } : undefined}
         isFilled
       >
-        <Form isWidthLimited>
+        <Form isWidthLimited onSubmit={(e) => e.preventDefault()}>
           <Stack hasGutter>
             <StackItem>
               <FormGroup

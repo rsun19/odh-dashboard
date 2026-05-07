@@ -149,7 +149,7 @@ const RegisterModel: React.FC = () => {
       empty={false}
     >
       <PageSection hasBodyWrapper={false} isFilled>
-        <Form isWidthLimited>
+        <Form isWidthLimited onSubmit={(e) => e.preventDefault()}>
           <Stack hasGutter>
             <FormSection className="pf-v6-u-pb-xl">
               <PrefilledModelRegistryField mrName={mrName} />

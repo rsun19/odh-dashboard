@@ -132,7 +132,11 @@ describe('Verify models can be registered in a model registry', () => {
         .findFormField(FormFieldSelector.LOCATION_PATH)
         .type(testData.objectStoragePath);
 
-      registerModelPage.findSubmitButton().should('be.enabled').click();
+      registerModelPage
+        .findSubmitButton()
+        .should('not.have.class', 'pf-m-progress')
+        .should('be.enabled')
+        .click();
 
       cy.step('Verify the object storage model was registered');
       cy.url().should('include', '/details');
@@ -165,7 +169,11 @@ describe('Verify models can be registered in a model registry', () => {
       registerModelPage.findFormField(FormFieldSelector.LOCATION_TYPE_URI).click();
       registerModelPage.findFormField(FormFieldSelector.LOCATION_URI).type(testData.uriPrimary);
 
-      registerModelPage.findSubmitButton().should('be.enabled').click();
+      registerModelPage
+        .findSubmitButton()
+        .should('not.have.class', 'pf-m-progress')
+        .should('be.enabled')
+        .click();
 
       cy.step('Verify the URI model was registered');
       cy.url().should('include', '/details');
