@@ -5,6 +5,7 @@ import { DashboardResource } from '@perses-dev/core';
 import {
   DashboardProvider,
   DatasourceStoreProvider,
+  PanelFocusProvider,
   VariableProvider,
 } from '@perses-dev/dashboards';
 import {
@@ -71,18 +72,20 @@ const PersesWrapperWithQueryParams: React.FC<PersesWrapperProps> = ({
                     datasourceApi={datasourceApi}
                   >
                     <DataQueriesProvider definitions={[]}>
-                      {dashboardResource ? (
-                        <DashboardProvider
-                          initialState={{
-                            isEditMode: false,
-                            dashboardResource,
-                          }}
-                        >
-                          {children}
-                        </DashboardProvider>
-                      ) : (
-                        <>{children}</>
-                      )}
+                      <PanelFocusProvider>
+                        {dashboardResource ? (
+                          <DashboardProvider
+                            initialState={{
+                              isEditMode: false,
+                              dashboardResource,
+                            }}
+                          >
+                            {children}
+                          </DashboardProvider>
+                        ) : (
+                          <>{children}</>
+                        )}
+                      </PanelFocusProvider>
                     </DataQueriesProvider>
                   </DatasourceStoreProvider>
                 </VariableProvider>

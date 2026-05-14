@@ -158,11 +158,17 @@ oc apply -n redhat-ods-applications -f manifests/observability/rhoai/perses-dash
 # oc apply -n opendatahub -f manifests/observability/odh/perses-dashboard-model.yaml
 ```
 
-If running on a cluster without the managed monitoring stack, also apply the datasource:
+If running on a cluster without the managed monitoring stack, also apply the datasources:
 
 ```bash
+# Non-tenancy datasource (port 9091, cluster-wide, requires cluster-monitoring-view)
 oc apply -n redhat-ods-applications -f packages/observability/setup/prometheus-data-source.yaml
+
+# Tenancy datasource (port 9092, project-scoped, requires view role in project)
+oc apply -n redhat-ods-applications -f packages/observability/setup/prometheus-tenancy-data-source.yaml
 ```
+
+> **Datasource routing:** The tenancy datasource (port 9092) is the default. Panels that don't specify a datasource name will use it. The existing admin dashboard manifests explicitly name `thanos-querier-datasource` to use the non-tenancy (port 9091) path.
 
 ## 4. Enable the Feature Flag
 

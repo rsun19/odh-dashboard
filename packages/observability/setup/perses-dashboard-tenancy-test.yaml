@@ -1,0 +1,128 @@
+apiVersion: perses.dev/v1alpha1
+kind: PersesDashboard
+metadata:
+  name: dashboard-2-tenancy-test
+spec:
+  display:
+    name: Tenancy Test
+  duration: 1h
+  variables:
+    - kind: ListVariable
+      spec:
+        name: namespace
+        display:
+          name: Project
+        allowMultiple: false
+        plugin:
+          kind: PrometheusLabelValuesVariable
+          spec:
+            datasource:
+              kind: PrometheusDatasource
+              name: thanos-querier-datasource
+            labelName: namespace
+            matchers:
+              - container_memory_working_set_bytes
+  panels:
+    containerCount:
+      kind: Panel
+      spec:
+        display:
+          name: Running containers
+        plugin:
+          kind: StatChart
+          spec:
+            calculation: last-number
+            format:
+              unit: decimal
+              decimalPlaces: 0
+        queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: thanos-querier-tenancy-datasource
+                  query: count(container_memory_working_set_bytes{container!=""})
+                  seriesNameFormat: Containers
+    memoryUsage:
+      kind: Panel
+      spec:
+        display:
+          name: Memory usage
+        plugin:
+          kind: TimeSeriesChart
+          spec:
+            visual:
+              areaOpacity: 0.6
+              display: line
+              lineWidth: 1.5
+            yAxis:
+              format:
+                unit: bytes
+              min: 0
+        queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: thanos-querier-tenancy-datasource
+                  query: sum by (pod) (container_memory_working_set_bytes{container!=""})
+                  seriesNameFormat: "{{pod}}"
+    cpuUsage:
+      kind: Panel
+      spec:
+        display:
+          name: CPU usage
+        plugin:
+          kind: TimeSeriesChart
+          spec:
+            visual:
+              areaOpacity: 0.6
+              display: line
+              lineWidth: 1.5
+            yAxis:
+              format:
+                unit: decimal
+              min: 0
+        queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: thanos-querier-tenancy-datasource
+                  query: sum by (pod) (rate(container_cpu_usage_seconds_total{container!=""}[5m]))
+                  seriesNameFormat: "{{pod}}"
+  layouts:
+    - kind: Grid
+      spec:
+        display:
+          title: Namespace overview
+          collapse:
+            open: true
+        items:
+          - x: 0
+            'y': 0
+            width: 24
+            height: 4
+            content:
+              '$ref': '#/spec/panels/containerCount'
+          - x: 0
+            'y': 4
+            width: 12
+            height: 8
+            content:
+              '$ref': '#/spec/panels/memoryUsage'
+          - x: 12
+            'y': 4
+            width: 12
+            height: 8
+            content:
+              '$ref': '#/spec/panels/cpuUsage'
