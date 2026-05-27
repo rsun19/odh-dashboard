@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { DashboardResource } from '@perses-dev/core';
 import { useAccessReview } from '@odh-dashboard/internal/api/useAccessReview';
-import { useUser } from '@odh-dashboard/internal/redux/selectors/user';
 import useFetch, { type FetchStateObject } from '@odh-dashboard/internal/utilities/useFetch';
 import {
   filterDashboards,
@@ -18,7 +17,6 @@ type UsePersesDashboardsResult = Omit<FetchStateObject<DashboardResource[]>, 'da
  * Hook to fetch observability dashboards from Perses API
  */
 export const usePersesDashboards = (): UsePersesDashboardsResult => {
-  const { isAdmin } = useUser();
   const [canAccessThanosNonTenancy, thanosNonTenancyAccessLoaded] = useAccessReview(
     THANOS_QUERIER_NON_TENANCY_ACCESS,
   );
@@ -31,9 +29,9 @@ export const usePersesDashboards = (): UsePersesDashboardsResult => {
   } = useFetch(fetchPersesDashboardsMetadata, [], { initialPromisePurity: true });
 
   const dashboards = React.useMemo(() => {
-    const afterAdminFilter = filterDashboards(allDashboards, isAdmin);
+    const afterAdminFilter = filterDashboards(allDashboards, canAccessThanosNonTenancy);
     return filterDashboardsByThanosNonTenancyAccess(afterAdminFilter, canAccessThanosNonTenancy);
-  }, [allDashboards, isAdmin, canAccessThanosNonTenancy]);
+  }, [allDashboards, canAccessThanosNonTenancy]);
 
   return {
     dashboards,

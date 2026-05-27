@@ -52,24 +52,25 @@ export const filterDashboardsByThanosNonTenancyAccess = (
 };
 
 /**
- * Filters and sorts dashboards according to user admin status.
+ * Filters and sorts dashboards according to cluster metrics access.
  * - Only includes dashboards with names starting with PERSES_DASHBOARD_PREFIX
- * - Non-admin users are excluded from dashboards ending with PERSES_DASHBOARD_ADMIN_SUFFIX
+ * - Users without cluster metrics access are excluded from dashboards ending with
+ *   PERSES_DASHBOARD_ADMIN_SUFFIX
  * - Results are sorted lexicographically by metadata.name
  * @param dashboards - List of dashboard resources
- * @param isAdminUser - Boolean flag indicating if the user is an admin
+ * @param hasClusterMetricsAccess - Whether the user has cluster-scoped metrics access
  * @returns Filtered and sorted dashboards
  */
 export function filterDashboards(
   dashboards: DashboardResource[],
-  isAdminUser: boolean,
+  hasClusterMetricsAccess: boolean,
 ): DashboardResource[] {
   return dashboards
     .filter(({ metadata: { name } }) => {
       if (!name.startsWith(PERSES_DASHBOARD_PREFIX)) {
         return false;
       }
-      if (!isAdminUser && name.endsWith(PERSES_DASHBOARD_ADMIN_SUFFIX)) {
+      if (!hasClusterMetricsAccess && name.endsWith(PERSES_DASHBOARD_ADMIN_SUFFIX)) {
         return false;
       }
       return true;
