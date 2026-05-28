@@ -314,5 +314,11 @@ module.exports = (env) => ({
     extensions: ['.js', '.ts', '.tsx', '.jsx'],
     symlinks: true,
     cacheWithContext: false,
+    alias: {
+      '@perses-dev/components': path.resolve(
+        RELATIVE_DIRNAME,
+        '../packages/observability/node_modules/@perses-dev/explore/node_modules/@perses-dev/components',
+      ),
+    },
   },
 });
